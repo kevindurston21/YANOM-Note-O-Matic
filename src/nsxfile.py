@@ -5,6 +5,8 @@ from sn_note_page import NotePage
 from sn_zipfile_reader import NSXZipFileReader
 from sn_attachment_writer import AttachmentWriter
 from config_data import ConfigData
+from sn_note_writer import NoteWriter
+from sn_pandoc_converter import PandocConverter
 
 
 class NSXFile:
@@ -23,9 +25,12 @@ class NSXFile:
         self.note_pages = {}
         # self.add_note_pages()
         # self.add_note_pages_to_notebooks()
+        self.note_writer = None
+        self.pandoc_converter = PandocConverter(config_data.get_conversion_format())
 
     def process_nsx_file(self):
-        self.fetch_nsx_json_data()
+        self.create_note_writer()
+        self.nsx_json_data = self.fetch_json_data('config.json')
         self.notebook_ids = self.nsx_json_data['notebook']
         self.note_page_ids = self.nsx_json_data['note']
         self.add_notebooks()
@@ -39,8 +44,11 @@ class NSXFile:
     def do_something(self):
         print(self.nsx_file_name)
 
-    def fetch_nsx_json_data(self):
-        self.nsx_json_data = self.zipfile_reader.read_json_data('config.json')
+    def fetch_json_data(self, data_id):
+        return self.zipfile_reader.read_json_data(data_id)
+
+    def fetch_attachment_file(self, file_name):
+        return self.zipfile_reader.read_attachment_file(file_name)
 
     def add_notebooks(self):
         self.notebooks = {
@@ -70,6 +78,9 @@ class NSXFile:
             else:
                 self.notebooks['recycle_bin'].add_note_page_and_set_parent_notebook(self.note_pages[note_page_id])
 
+    def create_note_writer(self):
+        self.note_writer = NoteWriter(self.config_data)
+
     def create_attachments(self):
         for note_page_id in self.note_pages:
             self.note_pages[note_page_id].create_attachments()
@@ -89,3 +100,9 @@ class NSXFile:
 
     def get_zipfile_reader(self):
         return self.zipfile_reader
+
+    def get_note_writer(self):
+        return self.note_writer
+
+    def get_pandoc_converter(self):
+        return self.pandoc_converter

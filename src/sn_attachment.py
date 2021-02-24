@@ -5,17 +5,17 @@ from sn_zipfile_reader import NSXZipFileReader
 
 
 class Attachment(ABC):
-    def __init__(self, json_data, attachment_id, notebook_folder_name, config_data, zipfile_reader: NSXZipFileReader):
-        self.json = json_data
+    def __init__(self, note, attachment_id, nsx_file):
+        self.nsx_file = nsx_file
+        self.json = note.get_json_data()
         self.attachment_id = attachment_id
-        self.notebook_folder_name = notebook_folder_name
-        self.config_data = config_data
-        self.zipfile_reader = zipfile_reader
-        self.name = self.json['name']
+        self.notebook_folder_name = note.get_notebook_folder_name()
+        self.config_data = nsx_file.get_config_data()
+        self.name = self.json['attachment'][attachment_id]['name']
         self.file_name = ''
         self.path_relative_to_notebook = ''
         self.full_path = ''
-        self.nsx_filename = f"file_{self.json['md5']}"
+        self.filename_inside_nsx = f"file_{self.json['attachment'][attachment_id]['md5']}"
         self.html_link = ''
         super(Attachment, self).__init__()
 
@@ -33,8 +33,14 @@ class Attachment(ABC):
         self.create_html_link()
 
     def store_attachment(self):
-        writer = sn_attachment_writer.AttachmentWriter(self.config_data, self.zipfile_reader)
-        writer.store_attachment(self)
+        attachment_writer = sn_attachment_writer.AttachmentWriter(self.nsx_file)
+        attachment_writer.store_attachment(self)
+        self.get_updated_files_and_folders_from(attachment_writer)
+
+    def get_updated_files_and_folders_from(self, attachment_writer):
+        self.file_name = attachment_writer.get_output_file_name()
+        self.full_path = attachment_writer.get_output_file_path()
+        self.path_relative_to_notebook = attachment_writer.get_relative_path()
 
     def get_notebook_folder_name(self):
         return self.notebook_folder_name
@@ -43,10 +49,10 @@ class Attachment(ABC):
         return self.file_name
 
     def get_nsx_filename(self):
-        return self.nsx_filename
+        return self.filename_inside_nsx
 
-    def set_relative_path(self, path):
-        self.path_relative_to_notebook = path
+    # def set_relative_path(self, path):
+    #     self.path_relative_to_notebook = path
 
     def get_relative_path(self):
         return self.path_relative_to_notebook
@@ -54,19 +60,21 @@ class Attachment(ABC):
     def get_full_path(self):
         return self.full_path
 
-    def set_file_name(self, file_name):
-        self.file_name = file_name
+    def get_filename_inside_nsx(self):
+        return self.filename_inside_nsx
 
-    def set_full_path(self, path):
-        self.full_path = path
+    # def set_file_name(self, file_name):
+    #     self.file_name = file_name
+    #
+    # def set_full_path(self, path):
+    #     self.full_path = path
 
 
 class ImageAttachment(Attachment):
 
-    def __init__(self, json_data, attachment_id, notebook_folder_name, config_data, zipfile_reader: NSXZipFileReader):
-        super().__init__(json_data, attachment_id, notebook_folder_name, config_data, zipfile_reader)
-        self.html_image_ref = self.json['ref']
-        self.clean_name()
+    def __init__(self, note, attachment_id, nsx_file):
+        super().__init__(note, attachment_id, nsx_file)
+        self.html_image_ref = self.json['attachment'][attachment_id]['ref']
 
     def create_html_link(self):
         self.html_link = f"<img src={self.file_name} "
