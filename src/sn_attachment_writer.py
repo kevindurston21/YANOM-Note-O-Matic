@@ -1,6 +1,6 @@
 from pathlib import Path
 import sn_attachment  # import Attachment, ImageAttachment, FileAttachment
-from config_data import ConfigData
+from sn_config_data import ConfigData
 from helper_functions import generate_clean_path
 import random
 import string

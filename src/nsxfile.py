@@ -4,7 +4,7 @@ from sn_notebook import Notebook
 from sn_note_page import NotePage
 from sn_zipfile_reader import NSXZipFileReader
 from sn_attachment_writer import AttachmentWriter
-from config_data import ConfigData
+from sn_config_data import ConfigData
 from sn_note_writer import NoteWriter
 from sn_pandoc_converter import PandocConverter
 

@@ -130,4 +130,4 @@ dmypy.json
 
 # Other files
 .DS_Store
-.idea/
+/Pipfile.lock

@@ -1,4 +1,4 @@
-from config_data import ConfigData
+from sn_config_data import ConfigData
 from pathlib import Path
 from helper_functions import generate_clean_path
 

@@ -5,7 +5,7 @@ from pathlib import Path
 import logging
 from os.path import dirname, join
 from nsxfile import NSXFile
-from config_data import ConfigData
+from sn_config_data import ConfigData
 
 
 def main():
@@ -36,14 +36,6 @@ def fetch_nsx_backups(config_data):
     
     nsx_backups = [NSXFile(file, config_data) for file in nsx_files_to_convert]
     return nsx_backups
-
-#
-# def fetch_notebooks(nsx_backups):
-#     return [Notebook(nsx_backup) for nsx_backup in nsx_backups]
-#
-#
-# def fetch_pages(nsx_backups):
-#     return [NotePage(nsx_backup) for nsx_backup in nsx_backups]
 
 
 def read_file_list_to_convert(work_path):
