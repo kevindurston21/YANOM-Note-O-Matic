@@ -6,13 +6,15 @@ import logging
 from os.path import dirname, join
 from nsxfile import NSXFile
 from sn_config_data import ConfigData
+from config_data import ConfigData
 
 
 def main():
 
     start_logging()
 
-    config_data = ConfigData()
+    config_data = ConfigData('config.ini', allow_no_value=True)
+
     nsx_backups = fetch_nsx_backups(config_data)
 
     for nsx_file in nsx_backups:

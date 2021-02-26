@@ -5,7 +5,7 @@ from sn_note_page import NotePage
 from sn_zipfile_reader import NSXZipFileReader
 from sn_attachment_writer import AttachmentWriter
 from sn_config_data import ConfigData
-from sn_note_writer import NoteWriter
+from sn_note_writer import MDNoteWriter
 from sn_pandoc_converter import PandocConverter
 
 
@@ -26,7 +26,7 @@ class NSXFile:
         # self.add_note_pages()
         # self.add_note_pages_to_notebooks()
         self.note_writer = None
-        self.pandoc_converter = PandocConverter(config_data.get_conversion_format())
+        self.pandoc_converter = PandocConverter(config_data.get('export_formats', 'export_format'))
 
     def process_nsx_file(self):
         self.create_note_writer()
@@ -79,7 +79,7 @@ class NSXFile:
                 self.notebooks['recycle_bin'].add_note_page_and_set_parent_notebook(self.note_pages[note_page_id])
 
     def create_note_writer(self):
-        self.note_writer = NoteWriter(self.config_data)
+        self.note_writer = MDNoteWriter(self.config_data)
 
     def create_attachments(self):
         for note_page_id in self.note_pages:

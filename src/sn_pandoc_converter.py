@@ -30,7 +30,7 @@ class PandocConverter:
     def __init__(self, output_file_format):
         self.output_file_format = output_file_format
         self.pandoc_version = None
-        self.conversion_options = {'md': 'markdown_strict+pipe_tables-raw_html', 'gfm': 'gfm'}
+        self.conversion_options = {'q_own_notes': 'markdown_strict+pipe_tables-raw_html', 'gfm': 'gfm', 'obsidian': 'gfm', 'pdf': 'pdf'}
         self.pandoc_options = None
         check_pandoc_is_installed_if_not_exit_program()
         self.find_pandoc_version()

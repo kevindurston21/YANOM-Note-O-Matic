@@ -3,7 +3,9 @@ from pathlib import Path
 from helper_functions import generate_clean_path
 
 
-class NoteWriter:
+#  when add pdf and html etc this is likely to be inherited from an abstract note writer.
+
+class MDNoteWriter:
     def __init__(self, config_data: ConfigData):
         self.config_data = config_data
         self.current_directory_path = Path(__file__).parent.absolute()
@@ -15,7 +17,7 @@ class NoteWriter:
         Path(note.get_full_path()).write_text(note.get_converted_content(), 'utf-8')
 
     def generate_output_path_and_set_note_file_name(self, note):
-        dirty_filename = note.get_title() + '.' + self.config_data.get_file_extension()
+        dirty_filename = note.get_title() + '.md'
         self.output_file_name = (generate_clean_path(dirty_filename))
         n = 0
         target_path = Path(self.current_directory_path, self.output_folder, note.get_notebook_folder_name(), self.output_file_name)

@@ -5,7 +5,7 @@ from sn_attachment_writer import AttachmentWriter
 from sn_zipfile_reader import NSXZipFileReader
 from helper_functions import generate_clean_path
 from sn_pandoc_converter import PandocConverter
-from sn_note_writer import NoteWriter
+from sn_note_writer import MDNoteWriter
 
 
 class NotePage:
@@ -56,7 +56,7 @@ class NotePage:
         self.converted_content = self.pandoc_converter.convert_using_strings(self.raw_content, self.title)
 
     def create_file_writer(self):
-        self.note_writer = NoteWriter(self.config_data, self)
+        self.note_writer = MDNoteWriter(self.config_data, self)
 
     def update_paths_and_filenames(self):
         self.file_name = self.note_writer.get_output_file_name()
