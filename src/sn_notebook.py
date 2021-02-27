@@ -45,15 +45,15 @@ class Notebook:
 
     def create_notebook_folder(self):
         n = 0
-        target_path = Path(Path(__file__).parent.absolute(), self.nsx_file.config_data.output_folder, self.folder_name)
+        target_path = Path(Path(__file__).parent.absolute(), self.nsx_file.config_data.get('file_options','export_folder_name'), self.folder_name)
         while target_path.exists():
             n += 1
-            target_path = Path(Path(__file__).parent.absolute(), self.nsx_file.config_data.output_folder, f"{self.folder_name}-{n}")
+            target_path = Path(Path(__file__).parent.absolute(), self.nsx_file.config_data.get('file_options','export_folder_name'), f"{self.folder_name}-{n}")
 
         target_path.mkdir()
         self.folder_name = target_path.stem
         self.full_path_to_notebook = target_path
 
     def create_attachment_folder(self):
-        Path(self.full_path_to_notebook, self.config_data.get_attachment_folder()).mkdir()
+        Path(self.full_path_to_notebook, self.config_data.get('file_options', 'attachment_folder_name')).mkdir()
 

@@ -9,7 +9,7 @@ class MDNoteWriter:
     def __init__(self, config_data: ConfigData):
         self.config_data = config_data
         self.current_directory_path = Path(__file__).parent.absolute()
-        self.output_folder = config_data.get_output_folder()
+        self.output_folder = config_data.get('file_options', 'export_folder_name')
         self.output_full_path = None
         self.output_file_name = None
 

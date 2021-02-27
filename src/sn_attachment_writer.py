@@ -24,8 +24,8 @@ class AttachmentWriter:
         # self.zipfile_reader = zipfile_reader
         self.nsx_file = nsx_file
         self.current_directory_path = Path(__file__).parent.absolute()
-        self.output_folder = nsx_file.get_config_data().get_output_folder()
-        self.attachment_folder = nsx_file.get_config_data().get_attachment_folder()
+        self.output_folder = nsx_file.get_config_data().get('file_options', 'export_folder_name')
+        self.attachment_folder = nsx_file.get_config_data().get('file_options', 'attachment_folder_name')
         self.notebook_folder = None
         self.output_file_name = None
         self.input_file_name = None

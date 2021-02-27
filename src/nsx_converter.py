@@ -9,11 +9,18 @@ from sn_config_data import ConfigData
 from config_data import ConfigData
 
 
+class ConfigException(Exception):
+    pass
+
+
 def main():
 
     start_logging()
 
-    config_data = ConfigData('config.ini', allow_no_value=True)
+    logging.info("Creating instance of sn_config_data.ConfigData")
+    config_data = ConfigData('config.ini', 'gfm', allow_no_value=True)
+
+    config_data.load_quick_setting('obsidian')
 
     nsx_backups = fetch_nsx_backups(config_data)
 
@@ -24,9 +31,24 @@ def main():
 
 
 def start_logging():
-    log_file = join(dirname(__file__), 'nsx_converter.log')
-    logging.basicConfig(level=logging.DEBUG, filename=log_file,
-                        format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+
+    # create logger with 'yanom-application'
+    logger = logging.getLogger('yanom-application')
+    logger.setLevel(logging.DEBUG)
+    # create file handler which logs even debug messages
+    fh = logging.FileHandler('yanom-application.log')
+    fh.setLevel(logging.DEBUG)
+    # create console handler with a higher log level
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.ERROR)
+    # create formatter and add it to the handlers
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    fh.setFormatter(formatter)
+    ch.setFormatter(formatter)
+    # add the handlers to the logger
+    logger.addHandler(fh)
+    logger.addHandler(ch)
+    logger.info("program startup - logging enabled")
 
 
 def fetch_nsx_backups(config_data):

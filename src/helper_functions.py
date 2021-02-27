@@ -5,18 +5,6 @@ import re
 from pathlib import Path
 
 
-# def sanitise_path_string(path_str):
-#     for char in (':', '/', '\\', '|'):
-#         path_str = path_str.replace(char, '-')
-#     for char in ('?', '*'):
-#         path_str = path_str.replace(char, '')
-#     path_str = path_str.replace('<', '(')
-#     path_str = path_str.replace('>', ')')
-#     path_str = path_str.replace('"', "'")
-#     path_str = urllib.parse.unquote(path_str)
-#
-#     return path_str[:240]
-
 def generate_clean_path(value, allow_unicode=False):
     """
     This function is adapted from https://github.com/django/django/blob/master/django/utils/text.py
@@ -32,8 +20,6 @@ def generate_clean_path(value, allow_unicode=False):
     """
     value = str(value)
     parts = [Path(value).stem, Path(value).suffix]
-    # parts = Path(value).parts
-    stem = Path(value).stem
     for i in range(len(parts)):
         if not len(parts[i]):
             continue
