@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
-import sn_attachment_writer #import AttachmentWriter
+import sn_attachment_writer
 from helper_functions import generate_clean_path
-from sn_zipfile_reader import NSXZipFileReader
 
 
 class Attachment(ABC):
@@ -51,9 +50,6 @@ class Attachment(ABC):
     def get_nsx_filename(self):
         return self.filename_inside_nsx
 
-    # def set_relative_path(self, path):
-    #     self.path_relative_to_notebook = path
-
     def get_relative_path(self):
         return self.path_relative_to_notebook
 
@@ -62,12 +58,6 @@ class Attachment(ABC):
 
     def get_filename_inside_nsx(self):
         return self.filename_inside_nsx
-
-    # def set_file_name(self, file_name):
-    #     self.file_name = file_name
-    #
-    # def set_full_path(self, path):
-    #     self.full_path = path
 
 
 class ImageAttachment(Attachment):

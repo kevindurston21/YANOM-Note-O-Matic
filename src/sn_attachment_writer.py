@@ -1,27 +1,27 @@
+import logging
+from globals import APP_NAME
+from helper_functions import generate_new_filename
+import inspect
 from pathlib import Path
-import sn_attachment  # import Attachment, ImageAttachment, FileAttachment
-from sn_config_data import ConfigData
-from helper_functions import generate_clean_path
-import random
-import string
 
 
-def get_random_string(length):
-    letters = string.ascii_lowercase
-    return ''.join(random.choice(letters) for i in range(length))
+def what_module_is_this():
+    return __name__
 
 
-def generate_new_filename(path):
-    stem = Path(path).stem
-    stem = f"{stem}-{get_random_string(4)}"
-    new_filename = f"{stem}{Path(path).suffix}"
-    path = Path(Path(path).parent, new_filename)
-    return path
+def what_method_is_this():
+    return inspect.currentframe().f_back.f_code.co_name
+
+
+def what_class_is_this(obj):
+    return obj.__class__.__name__
 
 
 class AttachmentWriter:
     def __init__(self, nsx_file):
-        # self.zipfile_reader = zipfile_reader
+        self.logger = logging.getLogger(f'{APP_NAME}.{what_module_is_this()}.{what_class_is_this(self)}')
+        self.logger.setLevel(logging.DEBUG)
+        self.logger.info(f'{__name__} - Creating an instance of {what_class_is_this(self)}')
         self.nsx_file = nsx_file
         self.current_directory_path = Path(__file__).parent.absolute()
         self.output_folder = nsx_file.get_config_data().get('file_options', 'export_folder_name')
@@ -36,6 +36,7 @@ class AttachmentWriter:
     def store_attachment(self, attachment):
         self.generate_relative_path(attachment)
         self.generate_output_path(attachment)
+        self.logger.info(f"Storing attachment {attachment.get_file_name()} as {self.output_file_name}")
         Path(self.output_file_path).write_bytes(self.nsx_file.fetch_attachment_file(attachment.get_nsx_filename()))
 
     def generate_relative_path(self, attachment):
@@ -52,9 +53,6 @@ class AttachmentWriter:
         self.output_file_name = path.stem
         self.output_file_path = path
         self.relative_path = (Path(self.attachment_folder, self.output_file_name))
-
-    # def set_notebook_folder(self, notebook_folder):
-    #     self.notebook_folder = notebook_folder
 
     def get_output_file_name(self):
         return self.output_file_name

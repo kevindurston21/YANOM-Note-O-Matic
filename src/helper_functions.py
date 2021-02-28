@@ -1,8 +1,9 @@
-import urllib.request
-from urllib.parse import unquote
 import unicodedata
 import re
 from pathlib import Path
+import inspect
+import random
+import string
 
 
 def generate_clean_path(value, allow_unicode=False):
@@ -38,3 +39,14 @@ def generate_clean_path(value, allow_unicode=False):
     return Path(parts[0])
 
 
+def get_random_string(length):
+    letters = string.ascii_lowercase
+    return ''.join(random.choice(letters) for i in range(length))
+
+
+def generate_new_filename(path):
+    stem = Path(path).stem
+    stem = f"{stem}-{get_random_string(4)}"
+    new_filename = f"{stem}{Path(path).suffix}"
+    path = Path(Path(path).parent, new_filename)
+    return path
