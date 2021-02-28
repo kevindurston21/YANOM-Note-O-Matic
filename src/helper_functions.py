@@ -1,21 +1,10 @@
-import urllib.request
-from urllib.parse import unquote
 import unicodedata
 import re
 from pathlib import Path
+import inspect
+import random
+import string
 
-
-# def sanitise_path_string(path_str):
-#     for char in (':', '/', '\\', '|'):
-#         path_str = path_str.replace(char, '-')
-#     for char in ('?', '*'):
-#         path_str = path_str.replace(char, '')
-#     path_str = path_str.replace('<', '(')
-#     path_str = path_str.replace('>', ')')
-#     path_str = path_str.replace('"', "'")
-#     path_str = urllib.parse.unquote(path_str)
-#
-#     return path_str[:240]
 
 def generate_clean_path(value, allow_unicode=False):
     """
@@ -32,8 +21,6 @@ def generate_clean_path(value, allow_unicode=False):
     """
     value = str(value)
     parts = [Path(value).stem, Path(value).suffix]
-    # parts = Path(value).parts
-    stem = Path(value).stem
     for i in range(len(parts)):
         if not len(parts[i]):
             continue
@@ -52,3 +39,14 @@ def generate_clean_path(value, allow_unicode=False):
     return Path(parts[0])
 
 
+def get_random_string(length):
+    letters = string.ascii_lowercase
+    return ''.join(random.choice(letters) for i in range(length))
+
+
+def generate_new_filename(path):
+    stem = Path(path).stem
+    stem = f"{stem}-{get_random_string(4)}"
+    new_filename = f"{stem}{Path(path).suffix}"
+    path = Path(Path(path).parent, new_filename)
+    return path

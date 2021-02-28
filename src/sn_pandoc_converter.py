@@ -3,12 +3,27 @@ import subprocess
 import distutils.version
 import os
 import tempfile
-from pathlib import Path
 import logging
+from globals import APP_NAME
+from pathlib import Path
+import inspect
+
+
+def what_module_is_this():
+    return __name__
+
+
+def what_method_is_this():
+    return inspect.currentframe().f_back.f_code.co_name
+
+
+def what_class_is_this(obj):
+    return obj.__class__.__name__
 
 
 def check_pandoc_is_installed_if_not_exit_program():
     if not shutil.which('pandoc') and not os.path.isfile('pandoc'):
+        logging.info("Pandoc program not found - exiting")
         print("Can't find pandoc. Please install pandoc or place it to the directory, where the script is.")
         exit(1)
 
@@ -28,9 +43,14 @@ def create_temporary_files():
 
 class PandocConverter:
     def __init__(self, output_file_format):
+        self.logger = logging.getLogger(f'{APP_NAME}.{what_module_is_this()}.{what_class_is_this(self)}')
+        self.logger.setLevel(logging.DEBUG)
         self.output_file_format = output_file_format
         self.pandoc_version = None
-        self.conversion_options = {'md': 'markdown_strict+pipe_tables-raw_html', 'gfm': 'gfm'}
+        self.conversion_options = {'q_own_notes': 'markdown_strict+pipe_tables-raw_html',
+                                   'gfm': 'gfm',
+                                   'obsidian': 'gfm',
+                                   'pdf': 'pdf'}
         self.pandoc_options = None
         check_pandoc_is_installed_if_not_exit_program()
         self.find_pandoc_version()
@@ -41,12 +61,15 @@ class PandocConverter:
             self.pandoc_version = subprocess.run(['pandoc', '-v'], capture_output=True, text=True, timeout=3)
             self.pandoc_version = self.pandoc_version.stdout[7:].split('\n', 1)[0].strip()
             print('Found pandoc ' + str(self.pandoc_version))
+            self.logger.info(f"Found pandoc version {str(self.pandoc_version)}")
         except subprocess.CalledProcessError as e:
-            print("Error testing for pandoc please check nsx_converter.log and pandoc installation.")
-            print("Attempting to continue...")
+            self.logger.error(f"Exiting as unable to find pandoc\n{e}")
+            print("Error testing for pandoc please check pandoc installation and see *.log files.")
+            print("Exiting.")
+            exit(0)
 
     def generate_pandoc_options(self):
-
+        self.logger.info(f"Pandoc configured for export format - '{self.conversion_options[self.output_file_format]}'")
         self.pandoc_options = ['pandoc', '-f', 'html', '-t', self.conversion_options[self.output_file_format]]
 
         if self.pandoc_older_than_v_1_16():
@@ -68,6 +91,7 @@ class PandocConverter:
             out = subprocess.run(self.pandoc_options, input=input_data, capture_output=True, text=True, timeout=20)
             return out.stdout
         except subprocess.CalledProcessError:
+            self.logger.error(f" unable to convert note {note_title} in method {what_method_is_this()}")
             error_handling(note_title)
 
         return 'Error converting data'
@@ -85,6 +109,7 @@ class PandocConverter:
 
         except subprocess.CalledProcessError:
             error_handling(note_title)
+            self.logger.error(f"unable to convert note {note_title} in method {what_method_is_this()}")
 
         return 'Error converting data'
 

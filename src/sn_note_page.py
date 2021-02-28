@@ -1,15 +1,27 @@
-import zipfile
-import json
-import sn_attachment  # import Attachment, ImageAttachment, FileAttachment
-from sn_attachment_writer import AttachmentWriter
-from sn_zipfile_reader import NSXZipFileReader
+import sn_attachment
 from helper_functions import generate_clean_path
-from sn_pandoc_converter import PandocConverter
-from sn_note_writer import NoteWriter
+from sn_note_writer import MDNoteWriter
+import logging
+from globals import APP_NAME
+import inspect
+
+
+def what_module_is_this():
+    return __name__
+
+
+def what_method_is_this():
+    return inspect.currentframe().f_back.f_code.co_name
+
+
+def what_class_is_this(obj):
+    return obj.__class__.__name__
 
 
 class NotePage:
     def __init__(self, nsx_file, note_id, ):
+        self.logger = logging.getLogger(f'{APP_NAME}.{what_module_is_this()}.{what_class_is_this(self)}')
+        self.logger.setLevel(logging.DEBUG)
         self.nsx_file = nsx_file
         self.zipfile_reader = nsx_file.get_zipfile_reader()
         self.note_writer = nsx_file.get_note_writer()
@@ -31,12 +43,14 @@ class NotePage:
         self.full_path = ''
 
     def process_note(self):
+        self.logger.info(f"Processing note page '{self.title}' - {self.note_id}")
         self.create_attachments()
         self.process_attachments()
         self.convert_data()
         self.note_writer.generate_output_path_and_set_note_file_name(self)
         self.update_paths_and_filenames()
         self.note_writer.store_file(self)
+        self.logger.info(f"Processing of note page '{self.title}' - {self.note_id}  completed.")
 
     def get_parent_notebook_id(self):
         return self.parent_notebook
@@ -53,10 +67,11 @@ class NotePage:
             self.attachments[attachment_id].process_attachment()
 
     def convert_data(self):
+        self.logger.info(f"Converting content of '{self.title}' - {self.note_id}")
         self.converted_content = self.pandoc_converter.convert_using_strings(self.raw_content, self.title)
 
     def create_file_writer(self):
-        self.note_writer = NoteWriter(self.config_data, self)
+        self.note_writer = MDNoteWriter(self.config_data)
 
     def update_paths_and_filenames(self):
         self.file_name = self.note_writer.get_output_file_name()
@@ -68,17 +83,14 @@ class NotePage:
     def get_title(self):
         return self.title
 
+    def get_note_id(self):
+        return self.note_id
+
     def get_notebook_folder_name(self):
         return self.notebook_folder_name
 
-    # def set_file_name(self, file_name):
-    #     self.file_name = file_name
-
     def get_file_name(self):
         return self.file_name
-
-    # def set_full_path(self, path):
-    #     self.full_path = path
 
     def get_full_path(self):
         return self.full_path
