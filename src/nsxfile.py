@@ -1,12 +1,13 @@
 from sn_notebook import Notebook
 from sn_note_page import NotePage
 from sn_zipfile_reader import NSXZipFileReader
-from config_data import ConfigData
 from sn_note_writer import MDNoteWriter
+import quick_settings
 from sn_pandoc_converter import PandocConverter
 import logging
 from globals import APP_NAME
 import inspect
+from pathlib import Path
 
 
 def what_module_is_this():
@@ -23,11 +24,11 @@ def what_class_is_this(obj):
 
 class NSXFile:
 
-    def __init__(self, file, config_data: ConfigData):
+    def __init__(self, file, conversion_settings):
         self.logger = logging.getLogger(f'{APP_NAME}.{what_module_is_this()}.{what_class_is_this(self)}')
         self.logger.setLevel(logging.DEBUG)
         self.logger.info(f'{__name__} - Creating an instance of {what_class_is_this(self)}')
-        self.config_data = config_data
+        self.conversion_settings = conversion_settings
         self.nsx_file_name = file
         self.zipfile_reader = NSXZipFileReader(self.nsx_file_name)
         self.nsx_json_data = ''
@@ -36,7 +37,7 @@ class NSXFile:
         self.notebooks = {}
         self.note_pages = {}
         self.note_writer = None
-        self.pandoc_converter = PandocConverter(config_data.get('export_formats', 'export_format'))
+        self.pandoc_converter = PandocConverter(self.conversion_settings.export_format)
 
     def process_nsx_file(self):
         self.logger.info(f"Processing {self.nsx_file_name}")
@@ -46,6 +47,7 @@ class NSXFile:
         self.note_page_ids = self.nsx_json_data['note']
         self.add_notebooks()
         self.add_recycle_bin_notebook()
+        self.create_export_folder_if_not_exist()
         self.create_folders()
         self.add_note_pages()
         self.add_note_pages_to_notebooks()
@@ -71,6 +73,13 @@ class NSXFile:
     def add_recycle_bin_notebook(self):
         self.notebooks['recycle_bin'] = Notebook(self, 'recycle_bin')
 
+    def create_export_folder_if_not_exist(self):
+        target_path = Path(Path(__file__).parent.absolute(),
+                           self.conversion_settings.export_folder_name)
+
+        target_path.mkdir(exist_ok=True)
+        self.conversion_settings.export_folder_name = target_path.stem
+
     def create_folders(self):
         for notebooks_id in self.notebooks:
             self.notebooks[notebooks_id].create_folders()
@@ -90,7 +99,7 @@ class NSXFile:
                 self.notebooks['recycle_bin'].add_note_page_and_set_parent_notebook(self.note_pages[note_page_id])
 
     def create_note_writer(self):
-        self.note_writer = MDNoteWriter(self.config_data)
+        self.note_writer = MDNoteWriter(self.conversion_settings)
 
     def create_attachments(self):
         for note_page_id in self.note_pages:
@@ -106,8 +115,8 @@ class NSXFile:
     def get_file_name(self):
         return self.nsx_file_name
 
-    def get_config_data(self):
-        return self.config_data
+    def get_conversion_settings(self):
+        return self.conversion_settings
 
     def get_zipfile_reader(self):
         return self.zipfile_reader

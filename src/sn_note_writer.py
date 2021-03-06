@@ -1,4 +1,3 @@
-from config_data import ConfigData
 import logging
 from globals import APP_NAME
 from helper_functions import generate_clean_path
@@ -21,12 +20,12 @@ def what_class_is_this(obj):
 
 
 class MDNoteWriter:
-    def __init__(self, config_data: ConfigData):
+    def __init__(self, conversion_settings):
         self.logger = logging.getLogger(f'{APP_NAME}.{what_module_is_this()}.{what_class_is_this(self)}')
         self.logger.setLevel(logging.DEBUG)
-        self.config_data = config_data
+        self.conversion_settings = conversion_settings
         self.current_directory_path = Path(__file__).parent.absolute()
-        self.output_folder = config_data.get('file_options', 'export_folder_name')
+        self.output_folder = conversion_settings.export_folder_name
         self.output_full_path = None
         self.output_file_name = None
 

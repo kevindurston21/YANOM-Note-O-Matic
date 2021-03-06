@@ -1,1 +1,2 @@
-APP_NAME = 'yanom-app'
+APP_NAME = 'YANOM'
+APP_SUB_NAME = 'Note-O-Matic'

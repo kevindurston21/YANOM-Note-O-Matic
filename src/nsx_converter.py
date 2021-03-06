@@ -7,7 +7,7 @@ import logging.handlers as handlers
 from nsxfile import NSXFile
 from config_data import ConfigData
 from globals import APP_NAME
-
+from interactive_cli import StartUpCommandLineInterface
 
 log_filename = 'normal.log'
 error_log_filename = 'error.log'
@@ -48,21 +48,33 @@ def what_module_is_this():
 def main():
 
     main_logger = logging.getLogger(f'{APP_NAME}.{what_module_is_this()}')
-
     main_logger.info(f'{what_method_is_this()} - Program startup')
 
     config_data = ConfigData('config.ini', 'gfm', allow_no_value=True)
+    config_ini_conversion_settings = config_data.get_conversion_settings()
 
-    nsx_backups = fetch_nsx_backups(config_data)
+    # TODO if some command line option then run cli, need to integrate command line parameters here
+    command_line_interface = StartUpCommandLineInterface(config_ini_conversion_settings)
+    conversion_settings = command_line_interface.run_cli()
+    config_data.load_config_from_conversion_settings_obj(conversion_settings)
 
-    for nsx_file in nsx_backups:
-        nsx_file.process_nsx_file()
+    # TODO if some command line option load config  from file only skip the CLI
+    # config_data = ConfigData('config.ini', 'gfm', allow_no_value=True)
+
+    nsx_backups = fetch_nsx_backups(conversion_settings)
+
+    process_nsx_files(nsx_backups)
 
     print("Hello. I'm done")
     main_logger.info("Processing Completed - exiting normally")
 
 
-def fetch_nsx_backups(config_data):
+def run_interactive_command_line_interface():
+    cli = StartUpCommandLineInterface()
+    return cli.run_cli()
+
+
+def fetch_nsx_backups(conversion_settings):
     nsx_files_to_convert = read_file_list_to_convert(Path.cwd)
     
     if not nsx_files_to_convert:
@@ -70,8 +82,13 @@ def fetch_nsx_backups(config_data):
         print('No .nsx files found')
         exit(1)
     
-    nsx_backups = [NSXFile(file, config_data) for file in nsx_files_to_convert]
+    nsx_backups = [NSXFile(file, conversion_settings) for file in nsx_files_to_convert]
     return nsx_backups
+
+
+def process_nsx_files(nsx_backups):
+    for nsx_file in nsx_backups:
+        nsx_file.process_nsx_file()
 
 
 def read_file_list_to_convert(work_path):

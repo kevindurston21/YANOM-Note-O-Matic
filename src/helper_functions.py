@@ -1,7 +1,6 @@
 import unicodedata
 import re
 from pathlib import Path
-import inspect
 import random
 import string
 
@@ -50,3 +49,14 @@ def generate_new_filename(path):
     new_filename = f"{stem}{Path(path).suffix}"
     path = Path(Path(path).parent, new_filename)
     return path
+
+
+def bool_to_word(bool_value):
+    if bool_value:
+        return "yes"
+    if not bool_value:
+        return "no"
+
+
+if __name__ == '__main__':
+    pass

@@ -26,7 +26,7 @@ class NotePage:
         self.zipfile_reader = nsx_file.get_zipfile_reader()
         self.note_writer = nsx_file.get_note_writer()
         self.pandoc_converter = nsx_file.get_pandoc_converter()
-        self.config_data = nsx_file.get_config_data()
+        self.conversion_settings = nsx_file.get_conversion_settings()
         self.note_writer = nsx_file.get_note_writer()
         self.note_id = note_id
         self.note_json = nsx_file.fetch_json_data(note_id)
@@ -71,7 +71,7 @@ class NotePage:
         self.converted_content = self.pandoc_converter.convert_using_strings(self.raw_content, self.title)
 
     def create_file_writer(self):
-        self.note_writer = MDNoteWriter(self.config_data)
+        self.note_writer = MDNoteWriter(self.conversion_settings)
 
     def update_paths_and_filenames(self):
         self.file_name = self.note_writer.get_output_file_name()

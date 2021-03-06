@@ -1,9 +1,11 @@
 from configparser import ConfigParser
 from pathlib import Path
+from quick_settings import ConversionSettings
 import quick_settings
 import logging
 import inspect
 from globals import APP_NAME
+from interactive_cli import InvalidConfigFileCommandLineInterface
 
 
 def what_module_is_this():
@@ -23,69 +25,67 @@ class ConfigException(Exception):
 
 
 class ConfigData(ConfigParser):
+    """
+    Read, verify, update and write config.ini files
+
+    Attributes
+    ----------
+    logger : logging object
+        used for program logging
+    config_file : str
+        name of the configuration file to be parsed and to use for storing config data
+    default_quick_setting :  str
+        setting to be used if the config.ini is found to be invalid and uses chooses to use the default
+    conversion_settings :  Child of ConversionSettings, holds config data in a format to be used outside of the class
+    validation_values :  dict
+        holds the values required to validate a config file read from disk
+
+    """
     def __init__(self, config_file, default_quick_setting, **kwargs):
         super(ConfigData, self).__init__(**kwargs)
-        # Note: allow_no_value=True  allows for #comments in the ini file #comments are
-        # treated as 'values' with no value.  To get the comment into the ini use a dictionary entry
-        # where the key value pair are like this '#your comment': None
+        # Note: allow_no_value=True  allows for #comments in the ini file
         self.logger = logging.getLogger(f'{APP_NAME}.{what_module_is_this()}.{what_class_is_this(self)}')
         self.logger.setLevel(logging.DEBUG)
         self.config_file = config_file
         self.default_quick_setting = default_quick_setting
-        self.current_quick_setting = None
+        self.conversion_settings = quick_settings.please.provide('manual')
+        self.validation_values = self.conversion_settings.validation_values
         self.read_config_file()
         self.validate_config_file()
+        self.generate_conversion_settings_from_parsed_config_file_data()
+        self.logger.info(f"Settings from config.ini are {self.conversion_settings}")
+
+    def get_conversion_settings(self):
+        return self.conversion_settings
 
     def validate_config_file(self):
+        """
+        Validate config data.  Errors in the data prompt user to create a new default configuration or exit the program
+
+        """
         self.logger.debug("attempting to validate config file")
         try:
             self.validate_config()
             self.logger.info("config file validated")
         except ConfigException as e:
             self.logger.warning(f"Config file invalid \n{e}")
-            print("[d] Enter d to create a default configuration")
-            print("[x] Enter x to exit and edit config.ini")
-            while True:
-                what_to_do = input('Choose default or to exit? : ')
-                if what_to_do.lower() == 'x':
-                    self.logger.info("User exiting")
-                    exit(0)
-                elif what_to_do.lower() == 'd':
-                    self.logger.info("User chose to create default file")
-                    self.load_quick_setting(self.default_quick_setting)
-                    self.write_config_file()
-                    break
-                else:
-                    print(f"{what_to_do} was not an option")
+
+            ask_what_to_do = InvalidConfigFileCommandLineInterface()
+            what_to_do = ask_what_to_do.run_cli()
+            if what_to_do == 'exit':
+                exit(0)
+            self.logger.info("User chose to create default file")
+            self.load_config_from_conversion_quick_setting_string(self.default_quick_setting)
+            self.write_config_file()
 
     def validate_config(self):
-        required_values = {
-            'quick_settings': {
-                'quick_setting': ('manual', 'q_own_notes', 'obsidian', 'gfm', 'pdf')
-            },
-            'export_formats': {
-                'export_format': ('q_own_notes', 'obsidian', 'gfm', 'pdf')
-            },
-            'meta_data_options': {
-                'include_meta_data': ('yes', 'no'),
-                'yaml_meta_header_format': ('yes', 'no'),
-                'insert_title': ('yes', 'no'),
-                'insert_creation_time': ('yes', 'no'),
-                'insert_modified_time': ('yes', 'no'),
-                'include_tags': ('yes', 'no'),
-                'tag_prefix': '#',
-                'no_spaces_in_tags': ('yes', 'no'),
-                'split_tags': ('yes', 'no')
-            },
-            'file_options': {
-                'export_folder_name': 'notes',
-                'attachment_folder_name': 'attachments',
-                'creation_time_in_exported_file_name': ('yes', 'no')
-            },
-            'image_link_formats': {'image_link_format': ('strict_md', 'obsidian', 'gfm-html')}
-        }
+        """
+        Validate the current Config Data for any errors by comparing to a set of validation values.
 
-        for section, keys in required_values.items():
+        Errors will raise a ConfigException
+
+        """
+        for section, keys in self.validation_values.items():
             if section not in self:
                 raise ConfigException(f'Missing section {section} in the config ini file')
 
@@ -97,12 +97,41 @@ class ConfigData(ConfigParser):
                     if self[section][key] not in values:
                         raise ConfigException(f'Invalid value for {key} under section {section} in the config file')
 
+    def generate_conversion_settings_from_parsed_config_file_data(self):
+        """
+        Transcribe the values in a ConversionSettings object into the ConfigParser format used by this class
+
+        """
+        self.conversion_settings.quick_setting = self['quick_settings']['quick_setting']
+        self.conversion_settings.export_format = self['export_formats']['export_format']
+        self.conversion_settings.include_meta_data = self['meta_data_options']['include_meta_data']
+        self.conversion_settings.yaml_meta_header_format = self['meta_data_options']['yaml_meta_header_format']
+        self.conversion_settings.insert_title = self['meta_data_options']['insert_title']
+        self.conversion_settings.insert_creation_time = self['meta_data_options']['insert_creation_time']
+        self.conversion_settings.insert_modified_time = self['meta_data_options']['insert_modified_time']
+        self.conversion_settings.include_tags = self['meta_data_options']['include_tags']
+        self.conversion_settings.tag_prefix = self['meta_data_options']['tag_prefix']
+        self.conversion_settings.spaces_in_tags = self['meta_data_options']['spaces_in_tags']
+        self.conversion_settings.split_tags = self['meta_data_options']['split_tags']
+        self.conversion_settings.export_folder_name = self['file_options']['export_folder_name']
+        self.conversion_settings.attachment_folder_name = self['file_options']['attachment_folder_name']
+        self.conversion_settings.creation_time_in_exported_file_name = \
+            self['file_options']['creation_time_in_exported_file_name']
+        self.conversion_settings.image_link_format = self['image_link_formats']['image_link_format']
+
     def write_config_file(self):
         with open(self.config_file, 'w') as config_file:
             self.write(config_file)
             self.logger.info("Saving configuration file")
 
     def read_config_file(self):
+        """
+        Read config file. If file is missing generate a new one.
+
+        If config file is missing generate a ConversionSettings child object for the default conversion value
+        and use that to generate a config data set.
+
+        """
         self.logger.debug('reading config file')
         path = Path(self.config_file)
         if path.is_file():
@@ -110,14 +139,97 @@ class ConfigData(ConfigParser):
         else:
             self.logger.info('config.ini missing, generating new file and settings set to default.')
             print("config.ini missing, generating new file.")
-            self.load_quick_setting(self.default_quick_setting)
-            self.write_config_file()
+            self.load_config_from_conversion_quick_setting_string(self.default_quick_setting)
 
-    def load_quick_setting(self, setting):
-        self.current_quick_setting = quick_settings.please.provide(setting)
-        self.read_dict(self.current_quick_setting.provide_quick_settings())
-        self.logger.info(f"Quick setting {setting} loaded")
-        pass
+    def load_config_from_conversion_quick_setting_string(self, setting):
+        """
+        Generate a config data set and save the updated config file using a 'setting' value provided as a string
+        that uses a default configuration by generating a child class of ConversionSettings and using that object
+        to set the config values.
+
+        Parameters
+        ----------
+        setting
+            string: A key 'quick setting' value
+
+        """
+        self.conversion_settings = quick_settings.please.provide(setting)
+        self.__load_settings()
+
+    def load_config_from_conversion_settings_obj(self, settings: ConversionSettings):
+        """
+        Generate a config data set and save updtaed config file
+        Parameters
+        ----------
+        settings
+            ConversionSettings: A child of the class ConversionSettings
+
+        """
+        self.conversion_settings = settings
+        self.__load_settings()
+
+    def __load_settings(self):
+        """
+        Read a dictionary of config data, formatted for config file generation and store the new config file.
+
+        """
+        self.read_dict(self.generate_conversion_dict())
+        self.logger.info(f"Quick setting {self['quick_settings']['quick_setting']} loaded")
+        self.write_config_file()
+
+    def generate_conversion_dict(self):
+        """
+
+        Returns
+        -------
+        Dict
+            Dictionary, formatted for config file creation, using values from a ConversionSettings object
+
+        """
+        # comments are treated as 'values' with no value (value is set to None) i.e. they are dict entries
+        # where the key is the #comment string and the value is None
+        return {
+            'quick_settings': {
+                f'    # Valid entries are{", ".join(self.conversion_settings.valid_export_formats)}': None,
+                '    # use manual to use manual settings below': None,
+                '    # NOTE if an option other than - manual - is used the rest of the ': None,
+                '    # settings in this file will be set automatically': None,
+                '    #': None,
+                "quick_setting": self.conversion_settings.quick_setting,
+                '    # ': None,
+                '    # The following sections only apply if all of the above are no': None,
+                '    #  ': None
+            },
+            'export_formats': {
+                f'    # Valid entries are {", ".join(self.conversion_settings.valid_export_formats)}': None,
+                "export_format": self.conversion_settings.export_format
+            },
+            'meta_data_options': {
+                'include_meta_data': self.conversion_settings.include_meta_data,
+                '    # Note if include_meta_data = no then the following values will': None,
+                '    # not be included in the export file': None,
+                'yaml_meta_header_format': self.conversion_settings.yaml_meta_header_format,
+                'insert_title': self.conversion_settings.insert_title,
+                'insert_creation_time': self.conversion_settings.insert_creation_time,
+                'insert_modified_time': self.conversion_settings.insert_modified_time,
+                'include_tags': self.conversion_settings.include_tags,
+                'tag_prefix': self.conversion_settings.tag_prefix,
+                'spaces_in_tags': self.conversion_settings.spaces_in_tags,
+                'split_tags': self.conversion_settings.split_tags
+            },
+            'file_options': {
+                'export_folder_name': self.conversion_settings.export_folder_name,
+                'attachment_folder_name': self.conversion_settings.attachment_folder_name,
+                'creation_time_in_exported_file_name': self.conversion_settings.creation_time_in_exported_file_name
+            },
+            'image_link_formats': {
+                '    # valid entries are': None,
+                '    # strict_md     which looks like [](path to image)': None,
+                '    # gfm-html      which looks like <img src=path to file width=width_value>': None,
+                '    # obsidian      which looks like [|width_value](path to image)': None,
+                'image_link_format': self.conversion_settings.image_link_format
+            }
+        }
 
 
 if __name__ == '__main__':

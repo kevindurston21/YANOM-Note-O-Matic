@@ -24,7 +24,7 @@ class Notebook:
         self.logger.setLevel(logging.DEBUG)
         self.nsx_file = nsx_file
         self.notebook_id = notebook_id
-        self.config_data = self.nsx_file.get_config_data()
+        self.conversion_settings = self.nsx_file.get_conversion_settings()
         self.notebook_json = ''
         if self.notebook_id == 'recycle_bin':
             self.title = 'recycle_bin'
@@ -60,12 +60,12 @@ class Notebook:
     def create_notebook_folder(self):
         n = 0
         target_path = Path(Path(__file__).parent.absolute(),
-                           self.nsx_file.config_data.get('file_options','export_folder_name'),
+                           self.nsx_file.conversion_settings.export_folder_name,
                            self.folder_name)
         while target_path.exists():
             n += 1
             target_path = Path(Path(__file__).parent.absolute(),
-                               self.nsx_file.config_data.get('file_options','export_folder_name'),
+                               self.nsx_file.conversion_settings.export_folder_name,
                                f"{self.folder_name}-{n}")
 
         target_path.mkdir()
@@ -73,5 +73,5 @@ class Notebook:
         self.full_path_to_notebook = target_path
 
     def create_attachment_folder(self):
-        Path(self.full_path_to_notebook, self.config_data.get('file_options', 'attachment_folder_name')).mkdir()
+        Path(self.full_path_to_notebook, self.conversion_settings.attachment_folder_name).mkdir()
 
