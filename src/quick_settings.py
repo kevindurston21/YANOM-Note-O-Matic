@@ -1,8 +1,6 @@
 """
 Provide classes for provision of conversion settings for manual or specific pre configured sets of conversion settings
 
-
-
 """
 import object_factory
 from abc import ABC, abstractmethod
@@ -11,6 +9,9 @@ import inspect
 import logging
 from helper_functions import generate_clean_path
 from custom_inherit import DocInheritMeta
+import os
+from pathlib import Path
+import sys
 
 
 def what_module_is_this():
@@ -23,6 +24,10 @@ def what_method_is_this():
 
 def what_class_is_this(obj):
     return obj.__class__.__name__
+
+
+class ConversionSettingsError(Exception):
+    pass
 
 
 class ConversionSettingProvider(object_factory.ObjectFactory):
@@ -38,6 +43,7 @@ class ConversionSettingProvider(object_factory.ObjectFactory):
         Requested child object is generated based on request string value.
 
     """
+
     def provide(self, conversion_setting_type, **_ignored):
         return self.create(conversion_setting_type)
 
@@ -62,6 +68,10 @@ class ConversionSettings(metaclass=DocInheritMeta(style="numpy", abstract_base_c
         Export format names used to trigger specific conversion behaviour in style of file type
     _valid_image_link_formats: list
         Image link formats used in markdown files to style image links for display
+    _silent : bool
+        Run program with no output to command line
+    _source : pathlib.Path
+        Directory to search for nsx files or path to specific nsx file
     _quick_setting: str
         A trigger string used for a default set for some of the following filed values
     _export_format: str
@@ -100,6 +110,9 @@ class ConversionSettings(metaclass=DocInheritMeta(style="numpy", abstract_base_c
 
     """
     validation_values = {
+        'execution_mode': {
+            'silent': ('True', 'False')
+        },
         'quick_settings': {
             'quick_setting': ('manual', 'q_own_notes', 'obsidian', 'gfm', 'pdf')
         },
@@ -113,11 +126,13 @@ class ConversionSettings(metaclass=DocInheritMeta(style="numpy", abstract_base_c
             'insert_creation_time': ('True', 'False'),
             'insert_modified_time': ('True', 'False'),
             'include_tags': ('True', 'False'),
-            'tag_prefix': '#',
+            'tag_prefix': '',
             'spaces_in_tags': ('True', 'False'),
             'split_tags': ('True', 'False')
         },
         'file_options': {
+            'export_folder_name': '',
+            'attachment_folder_name': '',
             'creation_time_in_exported_file_name': ('True', 'False')
         },
         'image_link_formats': {'image_link_format': ('strict_md', 'obsidian', 'gfm-html')}
@@ -137,6 +152,8 @@ class ConversionSettings(metaclass=DocInheritMeta(style="numpy", abstract_base_c
         self._valid_quick_settings = list(self.validation_values['quick_settings']['quick_setting'])
         self._valid_export_formats = list(self.validation_values['export_formats']['export_format'])
         self._valid_image_link_formats = list(self.validation_values['image_link_formats']['image_link_format'])
+        self._silent = False
+        self._source = os.getcwd()
         self._quick_setting = 'gfm'
         self._export_format = 'gfm'
         self._include_meta_data = True
@@ -156,26 +173,28 @@ class ConversionSettings(metaclass=DocInheritMeta(style="numpy", abstract_base_c
         self.set_settings()
 
     def __str__(self):
-        return f'quick_setting={self.quick_setting}, export_format={self.export_format}, ' \
-               f'include_meta_data={self.include_meta_data}, yaml_header = {self.yaml_meta_header_format}, ' \
-               f'insert_title={self.insert_title}, insert_creation_time={self.insert_creation_time}, ' \
-               f'insert_modified_time={self.insert_modified_time}, include_tags={self.include_tags}, ' \
-               f'tag_prefix={self.tag_prefix}, spaces_in_tags={self.spaces_in_tags}, ' \
-               f'split_tags={self.split_tags}, export_folder_name={self.export_folder_name}, ' \
-               f'attachment_folder_name={self.attachment_folder_name}, ' \
-               f'creation_time_in_exported_file_name={self.creation_time_in_exported_file_name}, ' \
-               f'image_link_format={self.image_link_format}'
+        return f"{self.__class__.__name__}(silent={self.silent}, quick_setting='{self.quick_setting}', " \
+               f"export_format='{self.export_format}', include_meta_data={self.include_meta_data}, " \
+               f"yaml_header={self.yaml_meta_header_format}, insert_title={self.insert_title}, " \
+               f"insert_creation_time={self.insert_creation_time}, insert_modified_time={self.insert_modified_time}, " \
+               f"include_tags={self.include_tags}, tag_prefix='{self.tag_prefix}', " \
+               f"spaces_in_tags={self.spaces_in_tags}, split_tags={self.split_tags}, " \
+               f"export_folder_name='{self.export_folder_name}', " \
+               f"attachment_folder_name='{self.attachment_folder_name}', " \
+               f"creation_time_in_exported_file_name={self.creation_time_in_exported_file_name}, " \
+               f"image_link_format='{self.image_link_format}')"
 
     def __repr__(self):
-        return f'quick_setting={self.quick_setting}, export_format={self.export_format}, ' \
-               f'include_meta_data={self.include_meta_data}, yaml_header = {self.yaml_meta_header_format}, ' \
-               f'insert_title={self.insert_title}, insert_creation_time={self.insert_creation_time}, ' \
-               f'insert_modified_time={self.insert_modified_time}, include_tags={self.include_tags}, ' \
-               f'tag_prefix={self.tag_prefix}, spaces_in_tags={self.spaces_in_tags}, ' \
-               f'split_tags={self.split_tags}, export_folder_name={self.export_folder_name}, ' \
-               f'attachment_folder_name={self.attachment_folder_name}, ' \
-               f'creation_time_in_exported_file_name={self.creation_time_in_exported_file_name}, ' \
-               f'image_link_format={self.image_link_format}'
+        return f"{self.__class__.__name__}(silent={self.silent}, quick_setting='{self.quick_setting}', " \
+               f"export_format='{self.export_format}', include_meta_data={self.include_meta_data}, " \
+               f"yaml_header={self.yaml_meta_header_format}, insert_title={self.insert_title}, " \
+               f"insert_creation_time={self.insert_creation_time}, insert_modified_time={self.insert_modified_time}, " \
+               f"include_tags={self.include_tags}, tag_prefix='{self.tag_prefix}', " \
+               f"spaces_in_tags={self.spaces_in_tags}, split_tags={self.split_tags}, " \
+               f"export_folder_name='{self.export_folder_name}', " \
+               f"attachment_folder_name='{self.attachment_folder_name}', " \
+               f"creation_time_in_exported_file_name={self.creation_time_in_exported_file_name}, " \
+               f"image_link_format='{self.image_link_format}')"
 
     @abstractmethod
     def set_settings(self):
@@ -192,6 +211,30 @@ class ConversionSettings(metaclass=DocInheritMeta(style="numpy", abstract_base_c
     @property
     def valid_image_link_formats(self):
         return self._valid_image_link_formats
+
+    @property
+    def silent(self):
+        return self._silent
+
+    @silent.setter
+    def silent(self, value: bool):
+        self._silent = value
+
+    @property
+    def source(self):
+        return self._source
+
+    @source.setter
+    def source(self, value):
+        if value == '':
+            self._source = os.getcwd()
+        elif Path(value).exists():
+            self._source = Path(value)
+        else:
+            self.logger.error(f"Invalid source location - {value} - Exiting program")
+            if not self.silent:
+                print(f"Invalid source location - {value}")
+            raise ConversionSettingsError(f"Invalid source location - {value}")
 
     @property
     def quick_setting(self):
@@ -332,6 +375,7 @@ class ManualConversionSettings(ConversionSettings):
 
     Used for user configured selections and ConfigData Class to provide conversions read from ini files.
     """
+
     def set_settings(self):
         """Set initial conversion settings for a manual conversion setting"""
         self.logger.info("Manual conversion settings")
@@ -349,6 +393,7 @@ class QOwnNotesConversionSettings(ConversionSettings):
     """
     QOwnNotes conversion settings to convert input formats to format suitable for QOwnNotes users.
     """
+
     def set_settings(self):
         self.logger.info("QOwnNotes Setting conversion settings")
         self.quick_setting = 'q_own_notes'
@@ -360,6 +405,7 @@ class GfmConversionSettings(ConversionSettings):
     """
     Git-flavoured markdown conversion settings to convert input formats to gfm format.
     """
+
     def set_settings(self):
         self.logger.info("GFM conversion settings")
         self.quick_setting = 'gfm'
@@ -371,6 +417,7 @@ class ObsidianConversionSettings(ConversionSettings):
     """
     Obsidian conversion settings to convert input formats to format suitable for Obsidian users.
     """
+
     def set_settings(self):
         self.logger.info("Obsidian conversion settings")
         self.quick_setting = 'obsidian'
@@ -382,6 +429,7 @@ class PdfConversionSettings(ConversionSettings):
     """
     PDF conversion settings to convert input formats to pdf files plus attachments in a folder.
     """
+
     def set_settings(self):
         self.logger.info("PDF conversion settings")
         self.export_format = 'pdf'
@@ -394,3 +442,8 @@ please.register_builder('q_own_notes', QOwnNotesConversionSettings)
 please.register_builder('gfm', GfmConversionSettings)
 please.register_builder('obsidian', ObsidianConversionSettings)
 please.register_builder('pdf', PdfConversionSettings)
+
+
+
+
+
