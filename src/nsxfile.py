@@ -37,7 +37,7 @@ class NSXFile:
         self.notebooks = {}
         self.note_pages = {}
         self.note_writer = None
-        self.pandoc_converter = PandocConverter(self.conversion_settings.export_format)
+        self.pandoc_converter = PandocConverter(self.conversion_settings)
 
     def process_nsx_file(self):
         self.logger.info(f"Processing {self.nsx_file_name}")
@@ -54,9 +54,6 @@ class NSXFile:
         self.process_notebooks()
         self.create_attachments()
         self.logger.info(f"Processing of {self.nsx_file_name} complete.")
-
-    def do_something(self):
-        print(self.nsx_file_name)
 
     def fetch_json_data(self, data_id):
         return self.zipfile_reader.read_json_data(data_id)
