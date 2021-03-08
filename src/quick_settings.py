@@ -131,6 +131,7 @@ class ConversionSettings(metaclass=DocInheritMeta(style="numpy", abstract_base_c
             'split_tags': ('True', 'False')
         },
         'file_options': {
+            'source': '',
             'export_folder_name': '',
             'attachment_folder_name': '',
             'creation_time_in_exported_file_name': ('True', 'False')
@@ -227,7 +228,7 @@ class ConversionSettings(metaclass=DocInheritMeta(style="numpy", abstract_base_c
     @source.setter
     def source(self, value):
         if value == '':
-            self._source = os.getcwd()
+            self._source = Path(os.getcwd())
         elif Path(value).exists():
             self._source = Path(value)
         else:

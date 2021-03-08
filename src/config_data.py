@@ -80,7 +80,7 @@ class ConfigData(ConfigParser):
             self.logger.error(f"Passed invalid value - {value} - not a recognised quick setting string")
             raise ValueError(f"Conversion setting parameter must be a valid quick setting string "
                              f"{self._conversion_settings.valid_quick_settings} received '{value}'")
-        if type(value) is ConversionSettings:
+        if isinstance(value, ConversionSettings):
             self.load_config_from_conversion_settings_obj(value)
             return
         self.logger.error(f"Passed invalid value - {value}")
@@ -143,6 +143,7 @@ class ConfigData(ConfigParser):
         self._conversion_settings.tag_prefix = self['meta_data_options']['tag_prefix']
         self._conversion_settings.spaces_in_tags = self['meta_data_options']['spaces_in_tags']
         self._conversion_settings.split_tags = self['meta_data_options']['split_tags']
+        self._conversion_settings.source = self['file_options']['source']
         self._conversion_settings.export_folder_name = self['file_options']['export_folder_name']
         self._conversion_settings.attachment_folder_name = self['file_options']['attachment_folder_name']
         self._conversion_settings.creation_time_in_exported_file_name = \
