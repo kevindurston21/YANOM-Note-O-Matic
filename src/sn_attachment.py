@@ -9,7 +9,7 @@ class Attachment(ABC):
         self.json = note.get_json_data()
         self.attachment_id = attachment_id
         self.notebook_folder_name = note.get_notebook_folder_name()
-        self.conversion_settings = nsx_file.get_conversion_settings()
+        self.conversion_settings = nsx_file.conversion_settings
         self.name = self.json['attachment'][attachment_id]['name']
         self.file_name = ''
         self.path_relative_to_notebook = ''

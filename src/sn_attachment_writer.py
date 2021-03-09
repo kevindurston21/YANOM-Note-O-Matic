@@ -24,8 +24,8 @@ class AttachmentWriter:
         self.logger.info(f'{__name__} - Creating an instance of {what_class_is_this(self)}')
         self.nsx_file = nsx_file
         self.current_directory_path = Path(__file__).parent.absolute()
-        self.output_folder = nsx_file.conversion_settings.export_folder_name
-        self.attachment_folder = nsx_file.conversion_settings.attachment_folder_name
+        self.output_folder = nsx_file._conversion_settings.export_folder_name
+        self.attachment_folder = nsx_file._conversion_settings.attachment_folder_name
         self.notebook_folder = None
         self.output_file_name = None
         self.input_file_name = None

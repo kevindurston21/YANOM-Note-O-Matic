@@ -23,11 +23,11 @@ class NotePage:
         self.logger = logging.getLogger(f'{APP_NAME}.{what_module_is_this()}.{what_class_is_this(self)}')
         self.logger.setLevel(logging.DEBUG)
         self.nsx_file = nsx_file
-        self.zipfile_reader = nsx_file.get_zipfile_reader()
-        self.note_writer = nsx_file.get_note_writer()
-        self.pandoc_converter = nsx_file.get_pandoc_converter()
-        self.conversion_settings = nsx_file.get_conversion_settings()
-        self.note_writer = nsx_file.get_note_writer()
+        self.zipfile_reader = nsx_file.zipfile_reader
+        self.note_writer = nsx_file.note_writer
+        self.pandoc_converter = nsx_file.pandoc_converter
+        self.conversion_settings = nsx_file.conversion_settings
+        self.note_writer = nsx_file.note_writer
         self.note_id = note_id
         self.note_json = nsx_file.fetch_json_data(note_id)
         self.title = self.note_json['title']
@@ -41,6 +41,8 @@ class NotePage:
         self.notebook_folder_name = ''
         self.file_name = ''
         self.full_path = ''
+        self.image_count = 0
+        self.attachment_count = 0
 
     def process_note(self):
         self.logger.info(f"Processing note page '{self.title}' - {self.note_id}")
@@ -59,8 +61,11 @@ class NotePage:
         for attachment_id in self.attachments_json:
             if self.attachments_json[attachment_id]['type'].startswith('image'):
                 self.attachments[attachment_id] = sn_attachment.ImageAttachment(self, attachment_id, self.nsx_file)
+                self.image_count += 1
             else:
                 self.attachments[attachment_id] = sn_attachment.FileAttachment(self, attachment_id, self.nsx_file)
+                self.attachment_count += 1
+        return self.image_count, self.attachment_count
 
     def process_attachments(self):
         for attachment_id in self.attachments:

@@ -24,7 +24,7 @@ class Notebook:
         self.logger.setLevel(logging.DEBUG)
         self.nsx_file = nsx_file
         self.notebook_id = notebook_id
-        self.conversion_settings = self.nsx_file.get_conversion_settings()
+        self.conversion_settings = self.nsx_file.conversion_settings
         self.notebook_json = ''
         if self.notebook_id == 'recycle_bin':
             self.title = 'recycle_bin'
@@ -37,7 +37,7 @@ class Notebook:
         self.note_pages = []
 
     def fetch_notebook_data(self):
-        self.notebook_json = self.nsx_file.get_zipfile_reader().read_json_data(self.notebook_id)
+        self.notebook_json = self.nsx_file.zipfile_reader.read_json_data(self.notebook_id)
 
     def process_notebook_pages(self):
         self.logger.info(f"Processing note book {self.title} - {self.notebook_id}")
@@ -60,12 +60,12 @@ class Notebook:
     def create_notebook_folder(self):
         n = 0
         target_path = Path(Path(__file__).parent.absolute(),
-                           self.nsx_file.conversion_settings.export_folder_name,
+                           self.nsx_file._conversion_settings.export_folder_name,
                            self.folder_name)
         while target_path.exists():
             n += 1
             target_path = Path(Path(__file__).parent.absolute(),
-                               self.nsx_file.conversion_settings.export_folder_name,
+                               self.nsx_file._conversion_settings.export_folder_name,
                                f"{self.folder_name}-{n}")
 
         target_path.mkdir()

@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 import sys
 import inspect
-from pathlib import Path
 import logging
 import logging.handlers as handlers
 from nsxfile import NSXFile
@@ -10,7 +9,8 @@ from globals import APP_NAME
 from interactive_cli import StartUpCommandLineInterface
 from arg_parsing import CommandLineParsing
 import quick_settings
-from quick_settings import ConversionSettings
+from timer import Timer
+
 
 log_filename = 'normal.log'
 error_log_filename = 'error.log'
@@ -53,9 +53,17 @@ def what_class_is_this(obj):
 
 
 class NotesConvertor:
+    """
+    A class to intialise and organise the conversion of notes files into alternative output formats
+    """
+    @Timer(name="conversion", logger=root_logger.info)
     def __init__(self):
-        self.main_logger = logging.getLogger(f'{APP_NAME}.{what_module_is_this()}.{what_class_is_this(self)}')
-        self.main_logger.info(f'{what_method_is_this()} - Program startup')
+        self.logger = logging.getLogger(f'{APP_NAME}.{what_module_is_this()}.{what_class_is_this(self)}')
+        self.logger.info(f'{what_method_is_this()} - Program startup')
+        self._note_page_count = 0
+        self._note_book_count = 0
+        self._image_count = 0
+        self._attachment_count = 0
         self.conversion_settings = None
         self.nsx_backups = None
         self.command_line = CommandLineParsing()
@@ -65,7 +73,11 @@ class NotesConvertor:
         self.process_nsx_files()
         if not self.conversion_settings.silent:
             print("Hello. I'm done")
-        self.main_logger.info("Processing Completed - exiting normally")
+            print(f"{self._note_book_count} Note books")
+            print(f"{self._note_page_count} Note Pages")
+            print(f"{self._image_count} Images")
+            print(f"{self._attachment_count} Attachments")
+        self.logger.info("Processing Completed - exiting normally")
 
     def fetch_nsx_backups(self):
         nsx_files_to_convert = self.generate_file_list_to_convert()
@@ -84,6 +96,10 @@ class NotesConvertor:
     def process_nsx_files(self):
         for nsx_file in self.nsx_backups:
             nsx_file.process_nsx_file()
+            self._note_page_count += nsx_file.note_page_count
+            self._note_book_count += nsx_file.note_book_count
+            self._image_count += nsx_file.image_count
+            self._attachment_count += nsx_file.attachment_count
 
     def generate_file_list_to_convert(self):
         if not self.conversion_settings.source.is_file():
@@ -126,7 +142,7 @@ class NotesConvertor:
         self.conversion_settings = command_line_interface.run_cli()
         self.conversion_settings.source = self.command_line.args['source']
         self.config_data.conversion_settings = self.conversion_settings  # this will save the setting in the ini file
-        self.main_logger.info("Using conversion settings from interactive command line tool")
+        self.logger.info("Using conversion settings from interactive command line tool")
 
     def run_gui(self):
         root_logger.info("Using gui if it was coded....")
