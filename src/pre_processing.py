@@ -67,6 +67,9 @@ class NoteStationPreProcessing(PreProcessing):
         self.create_image_tag_processors()
         self.update_content_with_new_img_tags()
         self.clean_excessive_divs()
+        self.fix_ordered_list()
+        self.fix_unordered_list()
+        # self._pre_processed_content = '<ol><li>Number 1</li><li>Number 2<ol><li>Number sub 1</li><li>Number sub 2</li></ol></li><li>Number 3</li></ol></ol>'
 
     def create_image_tag_processors(self):
         raw_image_tags = re.findall('<img class=[^>]*syno-notestation-image-object[^>]*src=[^>]*ref=[^>]*>',
@@ -84,3 +87,11 @@ class NoteStationPreProcessing(PreProcessing):
         self._pre_processed_content = self._pre_processed_content.replace('<div></div>', '')
         self._pre_processed_content = self._pre_processed_content.replace('<div', '<p')
         self._pre_processed_content = self._pre_processed_content.replace('</div', '</p')
+
+    def fix_ordered_list(self):
+        self._pre_processed_content = self._pre_processed_content.replace('</li><ol>', '<ol>')
+        self._pre_processed_content = self._pre_processed_content.replace('</li></ol>', '</li></li></ol>')
+
+    def fix_unordered_list(self):
+        self._pre_processed_content = self._pre_processed_content.replace('</li><ul>', '<ul>')
+        self._pre_processed_content = self._pre_processed_content.replace('</li></ul>', '</li></li></ul>')

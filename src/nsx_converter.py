@@ -104,6 +104,7 @@ class NotesConvertor:
     def generate_file_list_to_convert(self):
         if not self.conversion_settings.source.is_file():
             return self.conversion_settings.source.glob('*.nsx')
+        return [self.conversion_settings.source]
 
     def evaluate_command_line_arguments(self):
 
