@@ -36,21 +36,21 @@ class AttachmentWriter:
     def store_attachment(self, attachment):
         self.generate_relative_path(attachment)
         self.generate_output_path(attachment)
-        self.logger.info(f"Storing attachment {attachment.get_file_name()} as {self.output_file_name}")
-        Path(self.output_file_path).write_bytes(self.nsx_file.fetch_attachment_file(attachment.get_nsx_filename()))
+        self.logger.info(f"Storing attachment {attachment.file_name} as {self.output_file_name}")
+        Path(self.output_file_path).write_bytes(self.nsx_file.fetch_attachment_file(attachment.filename_inside_nsx))
 
     def generate_relative_path(self, attachment):
-        self.path_relative_to_notebook = Path(self.attachment_folder, attachment.get_file_name())
+        self.path_relative_to_notebook = Path(self.attachment_folder, attachment.file_name)
 
     def generate_output_path(self, attachment):
         path = Path(self.current_directory_path, self.output_folder,
-                    attachment.get_notebook_folder_name(),
+                    attachment.notebook_folder_name,
                     self.path_relative_to_notebook)
 
         while path.is_file():
             path = generate_new_filename(path)
 
-        self.output_file_name = path.stem
+        self.output_file_name = path.name
         self.output_file_path = path
         self.relative_path = (Path(self.attachment_folder, self.output_file_name))
 
