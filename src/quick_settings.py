@@ -243,8 +243,11 @@ class ConversionSettings(metaclass=DocInheritMeta(style="numpy", abstract_base_c
 
     @quick_setting.setter
     def quick_setting(self, value):
+        if value is None:
+            return
         if value in self.valid_quick_settings:
             self._quick_setting = value
+            return
         else:
             raise ValueError(f"Invalid value for quick setting. "
                              f"Attempted to use {value}, valid values are {self.valid_quick_settings}")

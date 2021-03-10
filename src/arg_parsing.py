@@ -62,7 +62,6 @@ class CommandLineParsing:
         settings_from_group.add_argument("-i", "--ini", action="store_true",
                                          help="Use config.ini for conversion settings.")
         settings_from_group.add_argument('-q', "--quickset", choices=['q_own_notes', 'gfm', 'obsidian', 'pdf'],
-                                         default='gfm',
                                          help="Choose a quick conversion setting")
         settings_from_group.add_argument('-m', "--manual", action="store_true",
                                          help="Use manual settings commandline options")

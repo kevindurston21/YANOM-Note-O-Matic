@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from sn_attachment import ImageAttachment
 
 
-class PreProcesing(ABC):
+class PreProcessing(ABC):
     """Abstract class representing a pre conversion note formatting """
 
     @abstractmethod
@@ -44,7 +44,7 @@ class ImageTag:
         return self._raw_tag
 
 
-class NoteStationPreProcessing(PreProcesing):
+class NoteStationPreProcessing(PreProcessing):
     def __init__(self, raw_content: str, attachments: dict):
         self._pre_processed_content = raw_content
         self._attachments = attachments
@@ -53,6 +53,7 @@ class NoteStationPreProcessing(PreProcesing):
         self._image_tag_processors= []
         self._image_ref_to_image_path = {}
         self.pre_process_note_page()
+        pass
 
     @property
     def pre_processed_content(self):
@@ -65,25 +66,21 @@ class NoteStationPreProcessing(PreProcesing):
     def pre_process_note_page(self):
         self.create_image_tag_processors()
         self.update_content_with_new_img_tags()
-        pass
+        self.clean_excessive_divs()
 
     def create_image_tag_processors(self):
         raw_image_tags = re.findall('<img class=[^>]*syno-notestation-image-object[^>]*src=[^>]*ref=[^>]*>',
                                     self._pre_processed_content)
         self._image_tag_processors = [ImageTag(tag, self._attachments) for tag in raw_image_tags]
 
-
     def update_content_with_new_img_tags(self):
         for image_tag_processor in self._image_tag_processors:
             self._pre_processed_content = self._pre_processed_content.replace(image_tag_processor.raw_tag,
                                                                               image_tag_processor.processed_tag)
-
-    # def clean_excessive_divs(self):
-    #     """
-    #     Remove all the div's not containing only line breaks
-    #     """
-    #     self._pre_processed_content = re.sub('<div></div>', '', self._pre_processed_content)
-    #
-    #     # below was done in post processing
-    #     # self.page_content = re.sub('\n<div>\n', '', self.page_content)
-    #     # self.page_content = re.sub('\n</div>\n', '', self.page_content)
+    def clean_excessive_divs(self):
+        """
+        Remove all the div's not containing only line breaks
+        """
+        self._pre_processed_content = self._pre_processed_content.replace('<div></div>', '')
+        self._pre_processed_content = self._pre_processed_content.replace('<div', '<p')
+        self._pre_processed_content = self._pre_processed_content.replace('</div', '</p')
