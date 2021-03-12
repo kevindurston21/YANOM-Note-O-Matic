@@ -86,6 +86,10 @@ class CommandLineParsing:
         meta_settings_group.add_argument('--prefix', nargs='?', default='',
                                          help='Prefix to be applied to tag words. '
                                               'If not provided defaults to no prefix.')
+        manual_settings_group.add_argument('--row-head', action="store_true",
+                                           help='Make the first row of tables a header row')
+        manual_settings_group.add_argument('--column-head', action="store_true",
+                                           help='Make the first column of tables a header row')
         manual_settings_group.add_argument('--ctef', action="store_true",
                                            help='Add meta creation time to end of note filename')
         manual_settings_group.add_argument("--images", choices=['strict_md', 'obsidian', 'gfm-html'],
@@ -123,6 +127,8 @@ class CommandLineParsing:
         self.conversion_setting.tag_prefix = vars(self._args)['prefix']
         self.conversion_setting.spaces_in_tags = vars(self._args)['spaces']
         self.conversion_setting.split_tags = vars(self._args)['split']
+        self.conversion_setting.first_row_as_header = vars(self._args)['row_head']
+        self.conversion_setting.first_column_as_header = vars(self._args)['column_head']
         self.conversion_setting.source = vars(self._args)['source']
         self.conversion_setting.export_folder_name = vars(self._args)['export_folder']
         self.conversion_setting.attachment_folder_name = vars(self._args)['attachments']

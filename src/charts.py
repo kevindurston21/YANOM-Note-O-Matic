@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 import ast
 import pandas as pd
 import matplotlib.pyplot as plt
-from helper_functions import fig_to_img_buf
+from helper_functions import fig_to_img_buf, add_strong_between_tags
 import logging
 from globals import APP_NAME
 import inspect
@@ -54,6 +54,10 @@ class Chart(ABC):
 
     def make_html_chart_data_table(self):
         self._html_chart_data_table = self._df.to_html()
+        self._html_chart_data_table = self._html_chart_data_table.replace('\n', '')
+        self._html_chart_data_table = re.sub(">\s*<", '><', self._html_chart_data_table)
+        self._html_chart_data_table = add_strong_between_tags('<th>', '</th>', self._html_chart_data_table)
+        pass
 
     def make_csv_chart_data_string(self):
         self._csv_chart_data_string = self._df.to_csv()

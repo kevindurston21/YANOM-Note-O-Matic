@@ -75,13 +75,13 @@ class ConfigData(ConfigParser):
         """
         if type(value) is str:
             if value in self._conversion_settings.valid_quick_settings:
-                self.load_config_from_conversion_quick_setting_string(value)
+                self.load_and_save_config_from_conversion_quick_setting_string(value)
                 return
             self.logger.error(f"Passed invalid value - {value} - not a recognised quick setting string")
             raise ValueError(f"Conversion setting parameter must be a valid quick setting string "
                              f"{self._conversion_settings.valid_quick_settings} received '{value}'")
         if isinstance(value, ConversionSettings):
-            self.load_config_from_conversion_settings_obj(value)
+            self.load_and_save_config_from_conversion_settings_obj(value)
             return
         self.logger.error(f"Passed invalid value - {value}")
         raise TypeError(f"Conversion setting parameter must be a valid quick setting "
@@ -104,8 +104,7 @@ class ConfigData(ConfigParser):
             if what_to_do == 'exit':
                 sys.exit(0)
             self.logger.info("User chose to create default file")
-            self.load_config_from_conversion_quick_setting_string(self._default_quick_setting)
-            self._load_settings()
+            self.load_and_save_config_from_conversion_quick_setting_string(self._default_quick_setting)
 
     def __validate_config(self):
         """
@@ -143,6 +142,8 @@ class ConfigData(ConfigParser):
         self._conversion_settings.tag_prefix = self['meta_data_options']['tag_prefix']
         self._conversion_settings.spaces_in_tags = self['meta_data_options']['spaces_in_tags']
         self._conversion_settings.split_tags = self['meta_data_options']['split_tags']
+        self._conversion_settings.first_row_as_header = self['table_options']['first_row_as_header']
+        self._conversion_settings.first_column_as_header = self['table_options']['first_column_as_header']
         self._conversion_settings.source = self['file_options']['source']
         self._conversion_settings.export_folder_name = self['file_options']['export_folder_name']
         self._conversion_settings.attachment_folder_name = self['file_options']['attachment_folder_name']
@@ -173,7 +174,7 @@ class ConfigData(ConfigParser):
                 print("config.ini missing, generating new file.")
             self.conversion_settings = self._default_quick_setting
 
-    def load_config_from_conversion_quick_setting_string(self, setting):
+    def load_and_save_config_from_conversion_quick_setting_string(self, setting):
         """
         Generate a config data set and save the updated config file using a 'setting' value provided as a string
         that uses a default configuration by generating a child class of ConversionSettings and using that object
@@ -188,7 +189,7 @@ class ConfigData(ConfigParser):
         self._conversion_settings = quick_settings.please.provide(setting)
         self.__load_and_save_settings()
 
-    def load_config_from_conversion_settings_obj(self, settings: ConversionSettings):
+    def load_and_save_config_from_conversion_settings_obj(self, settings: ConversionSettings):
         """
         Generate a config data set and save updtaed config file
         Parameters
@@ -253,6 +254,10 @@ class ConfigData(ConfigParser):
                 'tag_prefix': self._conversion_settings.tag_prefix,
                 'spaces_in_tags': self._conversion_settings.spaces_in_tags,
                 'split_tags': self._conversion_settings.split_tags
+            },
+            'table_options': {
+                'first_row_as_header': self._conversion_settings.first_row_as_header,
+                'first_column_as_header': self._conversion_settings.first_column_as_header
             },
             'file_options': {
                 'source': self._conversion_settings.source,

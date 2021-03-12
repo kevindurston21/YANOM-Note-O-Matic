@@ -129,6 +129,10 @@ class ConversionSettings(metaclass=DocInheritMeta(style="numpy", abstract_base_c
             'spaces_in_tags': ('True', 'False'),
             'split_tags': ('True', 'False')
         },
+        'table_options': {
+            'first_row_as_header': ('True', 'False'),
+            'first_column_as_header': ('True', 'False')
+        },
         'file_options': {
             'source': '',
             'export_folder_name': '',
@@ -165,6 +169,8 @@ class ConversionSettings(metaclass=DocInheritMeta(style="numpy", abstract_base_c
         self._tag_prefix = '#'
         self._spaces_in_tags = False
         self._split_tags = False
+        self._first_row_as_header = True
+        self._first_column_as_header = True
         self._export_folder_name = 'notes'
         self._attachment_folder_name = 'attachments'
         self._creation_time_in_exported_file_name = False
@@ -178,6 +184,8 @@ class ConversionSettings(metaclass=DocInheritMeta(style="numpy", abstract_base_c
                f"yaml_header={self.yaml_meta_header_format}, insert_title={self.insert_title}, " \
                f"insert_creation_time={self.insert_creation_time}, insert_modified_time={self.insert_modified_time}, " \
                f"include_tags={self.include_tags}, tag_prefix='{self.tag_prefix}', " \
+               f"first_row_as_header={self._first_row_as_header}, " \
+               f"first_column_as_header={self._first_column_as_header}" \
                f"spaces_in_tags={self.spaces_in_tags}, split_tags={self.split_tags}, " \
                f"export_folder_name='{self.export_folder_name}', " \
                f"attachment_folder_name='{self.attachment_folder_name}', " \
@@ -190,6 +198,8 @@ class ConversionSettings(metaclass=DocInheritMeta(style="numpy", abstract_base_c
                f"yaml_header={self.yaml_meta_header_format}, insert_title={self.insert_title}, " \
                f"insert_creation_time={self.insert_creation_time}, insert_modified_time={self.insert_modified_time}, " \
                f"include_tags={self.include_tags}, tag_prefix='{self.tag_prefix}', " \
+               f"first_row_as_header={self._first_row_as_header}, " \
+               f"first_column_as_header={self._first_column_as_header}" \
                f"spaces_in_tags={self.spaces_in_tags}, split_tags={self.split_tags}, " \
                f"export_folder_name='{self.export_folder_name}', " \
                f"attachment_folder_name='{self.attachment_folder_name}', " \
@@ -336,6 +346,22 @@ class ConversionSettings(metaclass=DocInheritMeta(style="numpy", abstract_base_c
         self._split_tags = value
 
     @property
+    def first_row_as_header(self):
+        return self._first_row_as_header
+
+    @first_row_as_header.setter
+    def first_row_as_header(self, value: bool):
+        self._first_row_as_header = value
+
+    @property
+    def first_column_as_header(self):
+        return self._first_column_as_header
+
+    @first_column_as_header.setter
+    def first_column_as_header(self, value: bool):
+        self._first_column_as_header = value
+
+    @property
     def export_folder_name(self):
         return self._export_folder_name
 
@@ -390,6 +416,8 @@ class ManualConversionSettings(ConversionSettings):
         self.include_tags = False
         self.spaces_in_tags = False
         self.split_tags = False
+        self.first_row_as_header = False
+        self.first_column_as_header = False
 
 
 class QOwnNotesConversionSettings(ConversionSettings):

@@ -5,6 +5,7 @@ from charts import NSChart
 import logging
 from globals import APP_NAME
 import inspect
+from helper_functions import add_strong_between_tags, change_html_tags
 
 
 def what_module_is_this():
@@ -17,14 +18,6 @@ def what_method_is_this():
 
 def what_class_is_this(obj):
     return obj.__class__.__name__
-
-
-class PreProcessing(ABC):
-    """Abstract class representing a pre conversion note formatting """
-
-    @abstractmethod
-    def pre_process_note_page(self):
-        pass
 
 
 class CheckListItem:
@@ -101,6 +94,14 @@ class ImageTag:
         return self._raw_tag
 
 
+class PreProcessing(ABC):
+    """Abstract class representing a pre conversion note formatting """
+
+    @abstractmethod
+    def pre_process_note_page(self):
+        pass
+
+
 class NoteStationPreProcessing(PreProcessing):
     def __init__(self, note):
         self.logger = logging.getLogger(f'{APP_NAME}.{what_module_is_this()}.{what_class_is_this(self)}')
@@ -133,8 +134,13 @@ class NoteStationPreProcessing(PreProcessing):
         self.__fix_ordered_list()
         self.__fix_unordered_list()
         self.__replace_check_lists()
+        self.__add_boarder_to_tables()
+        if self._note.conversion_settings.first_row_as_header:
+            self.__fix_table_headers()
+        if self._note.conversion_settings.first_column_as_header:
+            self.__first_column_in_table_as_header_if_required()
         self.__extract_and_generate_chart()
-        pass
+
 
     def __create_image_tag_processors(self):
         self.logger.info(f"Cleaning image tags")
@@ -219,3 +225,30 @@ class NoteStationPreProcessing(PreProcessing):
     def __replace_raw_chart_html_with_pre_processed_html(self, chart, raw_charts_html):
         replacement_html = self.__generate_replacement_html(chart)
         self.pre_processed_content = self.pre_processed_content.replace(raw_charts_html, replacement_html)
+
+    def __fix_table_headers(self):
+        self.logger.info(f"Cleaning table headers")
+        tables = re.findall('<table.*</table>', self._pre_processed_content)
+
+        for table in tables:
+            new_table = table
+            new_table = new_table.replace('<b>', '<strong>')
+            new_table = new_table.replace('</b>', '</strong>')
+            new_table = new_table.replace('<tbody>', '<thead>')
+            new_table = new_table.replace('</td></tr>', '</td></tr></thead><tbody>', 1)
+            self._pre_processed_content = self._pre_processed_content.replace(table, new_table)
+
+    def __first_column_in_table_as_header_if_required(self):
+        self.logger.info(f"Make tables first column bold")
+        tables = re.findall('<table.*</table>', self._pre_processed_content)
+        for table in tables:
+            new_table = add_strong_between_tags('<tr><td>', '</td><td>', table)
+            new_table = change_html_tags('<tr><td>', '</td>', '<tr><th>', '</th>', new_table)
+            self._pre_processed_content = self._pre_processed_content.replace(table, new_table)
+
+    def __add_boarder_to_tables(self):
+        tables = re.findall('<table.*</table>', self._pre_processed_content)
+        for table in tables:
+            new_table = table
+            new_table = new_table.replace('<table', '<table border="1"')
+            self._pre_processed_content = self._pre_processed_content.replace(table, new_table)

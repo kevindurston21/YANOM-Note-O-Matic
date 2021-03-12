@@ -152,3 +152,7 @@ class NotePage:
     @attachment_count.setter
     def attachment_count(self, value):
         self._attachment_count = value
+
+    @property
+    def conversion_settings(self):
+        return self._conversion_settings
