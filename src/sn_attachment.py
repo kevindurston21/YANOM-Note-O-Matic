@@ -4,18 +4,22 @@ from helper_functions import generate_clean_path
 
 
 class Attachment(ABC):
-    def __init__(self, note, attachment_id, nsx_file):
-        super(Attachment, self).__init__()
-        self._nsx_file = nsx_file
-        self._json = note.json_data
+    def __init__(self, note, attachment_id):
         self._attachment_id = attachment_id
-        self._notebook_folder_name = note._notebook_folder_name
-        self._conversion_settings = nsx_file._conversion_settings
-        self._name = self._json['attachment'][attachment_id]['name']
+        self._note = note
+
+
+class NSAttachment(Attachment):
+    def __init__(self, note, attachment_id):
+        super(NSAttachment, self).__init__(note, attachment_id)
+        self._nsx_file = self._note.nsx_file
+        self._json = self._note.json_data
+        self._notebook_folder_name = note.notebook_folder_name
+        self._conversion_settings = self._nsx_file.conversion_settings
         self._file_name = ''
         self._path_relative_to_notebook = ''
         self._full_path = ''
-        self._filename_inside_nsx = f"file_{self._json['attachment'][attachment_id]['md5']}"
+        self._filename_inside_nsx = ''
         self._html_link = ''
 
     @abstractmethod
@@ -33,7 +37,7 @@ class Attachment(ABC):
 
     def store_attachment(self):
         attachment_writer = sn_attachment_writer.AttachmentWriter(self._nsx_file)
-        attachment_writer.store_attachment(self)
+        attachment_writer.store_nsx_attachment(self)
         self.get_updated_files_and_folders_from(attachment_writer)
 
     def get_updated_files_and_folders_from(self, attachment_writer):
@@ -61,12 +65,22 @@ class Attachment(ABC):
     def filename_inside_nsx(self):
         return self._filename_inside_nsx
 
+    @property
+    def html_link(self):
+        return self._html_link
 
-class ImageAttachment(Attachment):
+    @html_link.setter
+    def html_link(self, value):
+        self._html_link = value
 
-    def __init__(self, note, attachment_id, nsx_file):
-        super().__init__(note, attachment_id, nsx_file)
+
+class ImageNSAttachment(NSAttachment):
+
+    def __init__(self, note, attachment_id):
+        super().__init__(note, attachment_id)
         self._image_ref = self._json['attachment'][attachment_id]['ref']
+        self._name = self._json['attachment'][attachment_id]['name']
+        self._filename_inside_nsx = f"file_{self._json['attachment'][attachment_id]['md5']}"
 
     @property
     def image_ref(self):
@@ -80,10 +94,53 @@ class ImageAttachment(Attachment):
         self._file_name = generate_clean_path(self._name)
 
 
-class FileAttachment(Attachment):
+class FileNSAttachment(NSAttachment):
+    def __init__(self, note, attachment_id):
+        super().__init__(note, attachment_id)
+        self._name = self._json['attachment'][attachment_id]['name']
+        self._filename_inside_nsx = f"file_{self._json['attachment'][attachment_id]['md5']}"
 
+    def create_html_link(self):
+        self._html_link = f"<a href='{self._path_relative_to_notebook}'>{self.file_name}</a>"
+
+    def clean_name(self):
+        self._file_name = generate_clean_path(self._name)
+
+
+class ChartNSAttachment(NSAttachment):
+
+    def __init__(self, note, attachment_id, chart_file_like_object):
+        super().__init__(note, attachment_id)
+        self._chart_file_like_object = chart_file_like_object
+        self._file_name = attachment_id
+        self.process_attachment()
+
+    def process_attachment(self):
+        self.store_attachments()
+        self.create_html_link()
+
+    def store_attachments(self):
+        attachment_writer = sn_attachment_writer.AttachmentWriter(self._nsx_file)
+        attachment_writer.store_chart_attachment(self)
+        self.get_updated_files_and_folders_from(attachment_writer)
+
+    @abstractmethod
     def create_html_link(self):
         pass
 
     def clean_name(self):
-        self._file_name = generate_clean_path(self._name)
+        pass
+
+    @property
+    def chart_file_like_object(self):
+        return self._chart_file_like_object
+
+
+class ChartImageNSAttachment(ChartNSAttachment):
+    def create_html_link(self):
+        self.html_link = f"<img src='{self.path_relative_to_notebook}'>"
+
+
+class ChartStringNSAttachment(ChartNSAttachment):
+    def create_html_link(self):
+        self.html_link = f"<a href='{self.path_relative_to_notebook}'>Chart data file</a>"

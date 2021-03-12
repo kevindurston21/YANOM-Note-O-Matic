@@ -1,5 +1,6 @@
 import unicodedata
 import re
+import io
 from pathlib import Path
 import random
 import string
@@ -56,6 +57,14 @@ def bool_to_word(bool_value):
         return "yes"
     if not bool_value:
         return "no"
+
+
+def fig_to_img_buf(fig):
+    """Convert a Matplotlib figure to a io.Bytes buffer and return it"""
+    buf = io.BytesIO()
+    fig.savefig(buf, format='png')  # png is often smaller than jpeg for plots
+    buf.seek(0)
+    return buf
 
 
 if __name__ == '__main__':

@@ -24,11 +24,11 @@ class NotePage:
         self.logger = logging.getLogger(f'{APP_NAME}.{what_module_is_this()}.{what_class_is_this(self)}')
         self.logger.setLevel(logging.DEBUG)
         self._nsx_file = nsx_file
-        self._zipfile_reader = nsx_file._zipfile_reader
-        self._note_writer = nsx_file._note_writer
-        self._pandoc_converter = nsx_file._pandoc_converter
-        self._conversion_settings = nsx_file._conversion_settings
-        self._note_writer = nsx_file._note_writer
+        self._zipfile_reader = nsx_file.zipfile_reader
+        self._note_writer = nsx_file.note_writer
+        self._pandoc_converter = nsx_file.pandoc_converter
+        self._conversion_settings = nsx_file.conversion_settings
+        self._note_writer = nsx_file.note_writer
         self._note_id = note_id
         self._note_json = nsx_file.fetch_json_data(note_id)
         self._title = self._note_json['title']
@@ -63,10 +63,10 @@ class NotePage:
     def create_attachments(self):
         for attachment_id in self._attachments_json:
             if self._attachments_json[attachment_id]['type'].startswith('image'):
-                self._attachments[attachment_id] = sn_attachment.ImageAttachment(self, attachment_id, self._nsx_file)
+                self._attachments[attachment_id] = sn_attachment.ImageNSAttachment(self, attachment_id)
                 self._image_count += 1
             else:
-                self._attachments[attachment_id] = sn_attachment.FileAttachment(self, attachment_id, self._nsx_file)
+                self._attachments[attachment_id] = sn_attachment.FileNSAttachment(self, attachment_id)
                 self._attachment_count += 1
         return self._image_count, self._attachment_count
 
@@ -75,9 +75,8 @@ class NotePage:
             self._attachments[attachment_id].process_attachment()
 
     def pre_process_content(self):
-        pre_processor = NoteStationPreProcessing(self._raw_content, self._attachments)
+        pre_processor = NoteStationPreProcessing(self)
         self._pre_processed_content = pre_processor.pre_processed_content
-
 
     def convert_data(self):
         self.logger.info(f"Converting content of '{self._title}' - {self._note_id}")
@@ -125,3 +124,31 @@ class NotePage:
     @property
     def pre_processed_content(self):
         return self._pre_processed_content
+
+    @property
+    def nsx_file(self):
+        return self._nsx_file
+
+    @property
+    def raw_content(self):
+        return self._raw_content
+
+    @property
+    def attachments(self):
+        return self._attachments
+
+    @property
+    def image_count(self):
+        return self._image_count
+
+    @image_count.setter
+    def image_count(self, value):
+        self._image_count = value
+
+    @property
+    def attachment_count(self):
+        return self._attachment_count
+
+    @attachment_count.setter
+    def attachment_count(self, value):
+        self._attachment_count = value

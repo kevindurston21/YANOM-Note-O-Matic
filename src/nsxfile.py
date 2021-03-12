@@ -2,7 +2,6 @@ from sn_notebook import Notebook
 from sn_note_page import NotePage
 from sn_zipfile_reader import NSXZipFileReader
 from sn_note_writer import MDNoteWriter
-import quick_settings
 from sn_pandoc_converter import PandocConverter
 import logging
 from globals import APP_NAME

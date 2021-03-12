@@ -3,7 +3,7 @@ Provide classes for provision of conversion settings for manual or specific pre 
 
 """
 import object_factory
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from globals import APP_NAME
 import inspect
 import logging
@@ -11,7 +11,6 @@ from helper_functions import generate_clean_path
 from custom_inherit import DocInheritMeta
 import os
 from pathlib import Path
-import sys
 
 
 def what_module_is_this():
@@ -139,13 +138,13 @@ class ConversionSettings(metaclass=DocInheritMeta(style="numpy", abstract_base_c
         'image_link_formats': {'image_link_format': ('strict_md', 'obsidian', 'gfm-html')}
     }
 
-    def __init__(self, **kwargs):
+    def __init__(self):
         # Note #comments are treated as 'values' with no value in a config.ini.
         # So to get the comment into the ini use a dictionary entry
         # where the key value pair are like this '#your comment': None
         # the #comments in these dicts are only there to add comments to the config.ini
 
-        # if you change anr of the following dictionaries changes are likely to affect the quick settings child classes
+        # if you change any of the following dictionaries changes are likely to affect the quick settings child classes
         # and the ConfigFileValidationSettings class
         # self.output_file_types = ['md', 'pdf']
         self.logger = logging.getLogger(f'{APP_NAME}.{what_module_is_this()}.{what_class_is_this(self)}')

@@ -10,7 +10,7 @@ from interactive_cli import StartUpCommandLineInterface
 from arg_parsing import CommandLineParsing
 import quick_settings
 from timer import Timer
-
+from quick_settings import ConversionSettings
 
 log_filename = 'normal.log'
 error_log_filename = 'error.log'
@@ -64,7 +64,7 @@ class NotesConvertor:
         self._note_book_count = 0
         self._image_count = 0
         self._attachment_count = 0
-        self.conversion_settings = None
+        self.conversion_settings = ConversionSettings
         self.nsx_backups = None
         self.command_line = CommandLineParsing()
         self.config_data = ConfigData('config.ini', 'gfm', allow_no_value=True)
