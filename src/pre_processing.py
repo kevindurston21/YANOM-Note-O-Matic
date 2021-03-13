@@ -20,6 +20,78 @@ def what_class_is_this(obj):
     return obj.__class__.__name__
 
 
+class MetaDataGenerator(ABC):
+    pass
+
+
+class NSMetaDataGenerator(MetaDataGenerator):
+    def __init__(self, note):
+        self._note = note
+        self._conversion_settings = note.conversion_settings
+        self._metadata_html = ''
+        self._metadata_yaml = ''
+        self._tags = self._note.json_data["tag"]
+        self.__generate_metadata()
+
+    def __generate_metadata(self):
+        self.__add_title_if_required()
+        self.__add_creation_time_if_required()
+        self.__add_modified_time_if_required()
+        self.__remove_tag_spaces_if_required()
+        self.__split_tags_if_required()
+        self.__add_tags_if_required()
+        self.__add_head_wrapper()
+
+    def __add_title_if_required(self):
+        self._metadata_html = f'{self._metadata_html}<meta name="title" content="{self._note.json_data["title"]}">'
+        self._metadata_yaml = f'title: {self._note.json_data["title"]}'
+
+    def __add_creation_time_if_required(self):
+        self._metadata_html = f'{self._metadata_html}<meta name="creation_time" content="{self._note.json_data["ctime"]}">'
+        self._metadata_yaml = f'creation_time: {self._note.json_data["ctime"]}'
+
+    def __add_modified_time_if_required(self):
+        self._metadata_html = f'{self._metadata_html}<meta name="modified_time" content="{self._note.json_data["mtime"]}">'
+        self._metadata_yaml = f'modified_time: {self._note.json_data["mtime"]}'
+
+    def __remove_tag_spaces_if_required(self):
+        if not self._conversion_settings.spaces_in_tags:
+            return
+        self._tags = [tag.replace(' ', '') for tag in self._tags]
+
+    def __split_tags_if_required(self):
+        if not self._conversion_settings.split_tags:
+            return
+        set_tags = {tag for tag_split in self._tags for tag in tag_split.split('/')}
+        self._tags = [tag for tag in set_tags]
+
+    def __add_tags_if_required(self):
+        if not self._conversion_settings.include_tags or not self._tags:
+            return
+
+        tag_string = ''
+        for tag in self._tags:
+            tag_string = f'{tag_string}, {tag}'
+
+        tag_string_for_html = f'"{tag_string[2:]}"'
+        tag_string_for_yaml = f'[{tag_string[2:]}]'
+
+        self._metadata_html = f'{self._metadata_html}<meta name="tags" content={tag_string_for_html}>'
+        self._metadata_yaml = f'tags: {tag_string_for_yaml}'
+
+    def __add_head_wrapper(self):
+        self._metadata_html = f"<head>{self._metadata_html}</head>"
+        self._metadata_yaml = f"---{self._metadata_yaml}---"
+
+    @property
+    def metadata_html(self):
+        return self._metadata_html
+
+    @property
+    def metadata_yaml(self):
+        return self._metadata_yaml
+
+
 class CheckListItem:
     def __init__(self, raw_item_htm):
         self._raw_item_html = raw_item_htm
@@ -140,7 +212,8 @@ class NoteStationPreProcessing(PreProcessing):
         if self._note.conversion_settings.first_column_as_header:
             self.__first_column_in_table_as_header_if_required()
         self.__extract_and_generate_chart()
-
+        if self._note.conversion_settings.include_meta_data:
+            self.__generate_metadata()
 
     def __create_image_tag_processors(self):
         self.logger.info(f"Cleaning image tags")
@@ -252,3 +325,7 @@ class NoteStationPreProcessing(PreProcessing):
             new_table = table
             new_table = new_table.replace('<table', '<table border="1"')
             self._pre_processed_content = self._pre_processed_content.replace(table, new_table)
+
+    def __generate_metadata(self):
+        header_generator = NSMetaDataGenerator(self._note)
+        self._pre_processed_content = f"{header_generator.metadata_html}{self._pre_processed_content}"

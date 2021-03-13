@@ -31,7 +31,7 @@ class PandocConverter:
         self.pandoc_version = None
         self.pandoc_conversion_options = {'q_own_notes': 'markdown_strict+pipe_tables-raw_html',
                                    'gfm': 'gfm',
-                                   'obsidian': 'gfm',
+                                   'obsidian': 'gfm-raw_html',
                                    'pdf': 'pdf'}
         self.pandoc_options = None
         self.check_pandoc_is_installed_if_not_exit_program()
@@ -54,7 +54,7 @@ class PandocConverter:
 
     def generate_pandoc_options(self):   # TODO perhaps change to more objects and probably a generator to allow for multiple option combinations for exmample md and pdf would be two diff objects for setting up pandoc
         self.logger.info(f"Pandoc configured for export format - '{self.pandoc_conversion_options[self.output_file_format]}'")
-        self.pandoc_options = ['pandoc', '-f', 'html', '-t', self.pandoc_conversion_options[self.output_file_format]]
+        self.pandoc_options = ['pandoc', '-f', 'html', '-s', '-t', self.pandoc_conversion_options[self.output_file_format]]
 
         if self.pandoc_older_than_v_1_16():
             self.pandoc_options = self.pandoc_options + ['--no-wrap']

@@ -45,6 +45,8 @@ class NotePage:
         self._full_path = ''
         self._image_count = 0
         self._attachment_count = 0
+        self._pre_processor = None
+        self._post_processor = None
 
     def process_note(self):
         self.logger.info(f"Processing note page '{self._title}' - {self._note_id}")
@@ -75,8 +77,8 @@ class NotePage:
             self._attachments[attachment_id].process_attachment()
 
     def pre_process_content(self):
-        pre_processor = NoteStationPreProcessing(self)
-        self._pre_processed_content = pre_processor.pre_processed_content
+        self._pre_processor = NoteStationPreProcessing(self)
+        self._pre_processed_content = self._pre_processor.pre_processed_content
 
     def convert_data(self):
         self.logger.info(f"Converting content of '{self._title}' - {self._note_id}")

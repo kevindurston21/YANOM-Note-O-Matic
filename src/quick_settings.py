@@ -452,6 +452,7 @@ class ObsidianConversionSettings(ConversionSettings):
     def set_settings(self):
         self.logger.info("Obsidian conversion settings")
         self.quick_setting = 'obsidian'
+        self.export_format = 'obsidian'
         self.yaml_meta_header_format = True
         self.image_link_format = 'obsidian'
 
