@@ -31,7 +31,7 @@ class PandocConverter:
         self.pandoc_version = None
         self.pandoc_conversion_options = {'q_own_notes': 'markdown_strict+pipe_tables-raw_html',
                                    'gfm': 'gfm',
-                                   'obsidian': 'gfm-raw_html',
+                                   'obsidian': 'gfm',
                                    'pdf': 'pdf'}
         self.pandoc_options = None
         self.check_pandoc_is_installed_if_not_exit_program()

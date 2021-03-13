@@ -92,29 +92,29 @@ class NSMetaDataGenerator(MetaDataGenerator):
         return self._metadata_yaml
 
 
-class CheckListItem:
+class CheckListItem(ABC):
     def __init__(self, raw_item_htm):
         self._raw_item_html = raw_item_htm
-        self._processed_item_html = str
-        self._item_checked = ' '  # note a space ' ' is unchecked and 'x' is checked
+        self._processed_item = str
+        self._item_checked = False
         self._item_text = str
         self._check_list_level = 1
         self.__find_item_text()
         self.__find_status()
         self.__find_item_level()
-        self.__build_processed_item_html()
+        self.build_processed_item()
 
     @property
     def raw_item_html(self):
         return self._raw_item_html
 
     @property
-    def processed_item_html(self):
-        return self._processed_item_html
+    def processed_item(self):
+        return self._processed_item
 
-    def __build_processed_item_html(self):
-        tabs = '\t' * self._check_list_level
-        self._processed_item_html = f"<p>-{tabs}[{self._item_checked}] {self._item_text}</p>"
+    @abstractmethod
+    def build_processed_item(self):
+        pass
 
     def __find_item_text(self):
         matches = re.findall('<input class=[^>]*syno-notestation-editor-checkbox[^>]*src=[^>]*type=[^>]*>([^<]*)',
@@ -124,13 +124,33 @@ class CheckListItem:
     def __find_status(self):
         matches = re.findall('syno-notestation-editor-checkbox-checked', self._raw_item_html)
         if matches:
-            self._item_checked = 'x'
+            self._item_checked = True
 
     def __find_item_level(self):
         matches = re.findall('[0-9]{2}', self._raw_item_html)
         if matches:
             indent = int(matches[0])
             self._check_list_level = indent // 30 + 1
+
+
+class GenerateMarkdownCheckListItem(CheckListItem):
+    def build_processed_item(self):
+        tabs = '\t' * self._check_list_level
+        checked = ' '
+        if self._item_checked:
+            checked = 'x'
+
+        self._processed_item = f"<p>-{tabs}[{checked}] {self._item_text}</p>"
+
+
+class GenerateHTMLCheckListItem(CheckListItem):
+    def build_processed_item(self):
+        indent = self._check_list_level * 30
+        checked = ''
+        if self._item_checked:
+            checked = 'checked'
+
+        self._processed_item = f'<p style="padding-left: {indent}px;"><input type="checkbox" {checked}/>{self._item_text}</p> '
 
 
 class ImageTag:
@@ -252,9 +272,19 @@ class NoteStationPreProcessing(PreProcessing):
             '<p[^>]*><input class=[^>]*syno-notestation-editor-checkbox[^>]*src=[^>]*type=[^>]*>[^<]*</p>',
             self._pre_processed_content)
 
-        check_list_items = [CheckListItem(item) for item in raw_checklists_items]
+        if self._note.conversion_settings.export_format == 'html':
+            check_list_items = [GenerateHTMLCheckListItem(item) for item in raw_checklists_items]
+        else:
+            check_list_items = [GenerateMarkdownCheckListItem(item) for item in raw_checklists_items]
+
         self._check_list_items = {id(item): item for item in check_list_items}
-        pass
+
+        if self._note.conversion_settings.export_format == 'html':
+            for item in self._check_list_items.values():
+                # For html export replace synology html with ner generated html
+                self._pre_processed_content = self._pre_processed_content.replace(item.raw_item_html,
+                                                                                  item.processed_item)
+            return
 
         for item in self._check_list_items.values():
             # Using 'check-list-id(item)' as a checklist item place holder as pandoc cannot cleanly convert checklists,
