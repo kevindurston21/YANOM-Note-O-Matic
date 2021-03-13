@@ -53,7 +53,7 @@ class Chart(ABC):
         return self._png_img_buffer
 
     def make_html_chart_data_table(self):
-        self._html_chart_data_table = self._df.to_html()
+        self._html_chart_data_table = self._df.to_html(formatters={'percent': '{:,.2f}'.format})
         self._html_chart_data_table = self._html_chart_data_table.replace('\n', '')
         self._html_chart_data_table = re.sub(">\s*<", '><', self._html_chart_data_table)
         self._html_chart_data_table = add_strong_between_tags('<th>', '</th>', self._html_chart_data_table)
@@ -128,20 +128,19 @@ class NSChart(Chart):
         fig = plot.get_figure()
         self._png_img_buffer = fig_to_img_buf(fig)
 
-    @staticmethod
-    def __format_data_for_pie_chart(plot_df):
-        plot_df["sum"] = plot_df.sum(axis=1)
-        plot_df["percent"] = plot_df["sum"] / plot_df["sum"].sum() * 100
-        return plot_df
+
+    def __format_data_for_pie_chart(self):
+        self._df["sum"] = self._df.sum(axis=1)
+        self._df["percent"] = self._df["sum"] / self._df["sum"].sum() * 100
 
     def __plot_pie_chart(self):
         self.logger.info("Creating pie chart")
-        plot_df = self.__format_data_for_pie_chart(self._df.copy())
-        explode = [0.02 for x in range(len(plot_df.index))]
+        self.__format_data_for_pie_chart()
+        explode = [0.02 for x in range(len(self._df.index))]
         fig, ax = plt.subplots()
         plt.title(self._title)
         plt.gca().axis("equal")
-        pie = plt.pie(plot_df['sum'], autopct='%1.2f%%', pctdistance=1.2, explode=explode)
+        pie = plt.pie(self._df['sum'], autopct='%1.2f%%', pctdistance=1.2, explode=explode)
         labels = self._y_category_labels
         plt.legend(pie[0], labels, bbox_to_anchor=(1, 1), loc="upper right",
                    bbox_transform=plt.gcf().transFigure)
