@@ -6,6 +6,7 @@ import logging
 from globals import APP_NAME
 import inspect
 from helper_functions import add_strong_between_tags, change_html_tags
+import time
 
 
 def what_module_is_this():
@@ -44,15 +45,17 @@ class NSMetaDataGenerator(MetaDataGenerator):
 
     def __add_title_if_required(self):
         self._metadata_html = f'{self._metadata_html}<meta name="title" content="{self._note.json_data["title"]}">'
-        self._metadata_yaml = f'title: {self._note.json_data["title"]}'
+        self._metadata_yaml = f'{self._metadata_yaml}title: {self._note.json_data["title"]}\n'
 
     def __add_creation_time_if_required(self):
-        self._metadata_html = f'{self._metadata_html}<meta name="creation_time" content="{self._note.json_data["ctime"]}">'
-        self._metadata_yaml = f'creation_time: {self._note.json_data["ctime"]}'
+        formatted_time = time.strftime('%Y-%m-%d %H:%M', time.localtime(self._note.json_data["ctime"]))
+        self._metadata_html = f'{self._metadata_html}<meta name="creation_time" content="{formatted_time}">'
+        self._metadata_yaml = f'{self._metadata_yaml}creation_time: {formatted_time}\n'
 
     def __add_modified_time_if_required(self):
-        self._metadata_html = f'{self._metadata_html}<meta name="modified_time" content="{self._note.json_data["mtime"]}">'
-        self._metadata_yaml = f'modified_time: {self._note.json_data["mtime"]}'
+        formatted_time = time.strftime('%Y-%m-%d %H:%M', time.localtime(self._note.json_data["mtime"]))
+        self._metadata_html = f'{self._metadata_html}<meta name="modified_time" content="{formatted_time}">'
+        self._metadata_yaml = f'{self._metadata_yaml}modified_time: {formatted_time}\n'
 
     def __remove_tag_spaces_if_required(self):
         if not self._conversion_settings.spaces_in_tags:
@@ -66,7 +69,10 @@ class NSMetaDataGenerator(MetaDataGenerator):
         self._tags = [tag for tag in set_tags]
 
     def __add_tags_if_required(self):
-        if not self._conversion_settings.include_tags or not self._tags:
+        if not self._conversion_settings.include_tags:
+            return
+
+        if not self._tags:
             return
 
         tag_string = ''
@@ -77,11 +83,11 @@ class NSMetaDataGenerator(MetaDataGenerator):
         tag_string_for_yaml = f'[{tag_string[2:]}]'
 
         self._metadata_html = f'{self._metadata_html}<meta name="tags" content={tag_string_for_html}>'
-        self._metadata_yaml = f'tags: {tag_string_for_yaml}'
+        self._metadata_yaml = f'{self._metadata_yaml}tags: {tag_string_for_yaml}\n'
 
     def __add_head_wrapper(self):
         self._metadata_html = f"<head>{self._metadata_html}</head>"
-        self._metadata_yaml = f"---{self._metadata_yaml}---"
+        self._metadata_yaml = f"---{self._metadata_yaml}---\n"
 
     @property
     def metadata_html(self):
