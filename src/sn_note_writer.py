@@ -29,20 +29,20 @@ class MDNoteWriter:
         self.output_full_path = None
         self.output_file_name = None
 
-    def store_file(self, note_page):
-        self.logger.info(f"Storing note '{note_page.title}' as '{self.output_file_name}' "
-                         f"in notebook folder '{note_page.notebook_folder_name}'")
-        Path(note_page.full_path).write_text(note_page.converted_content, 'utf-8')
+    def store_file(self, note):
+        self.logger.info(f"Storing note '{note.get_title()}' as '{self.output_file_name}' "
+                         f"in notebook folder '{note.get_notebook_folder_name()}'")
+        Path(note.get_full_path()).write_text(note.get_converted_content(), 'utf-8')
 
-    def generate_output_path_and_set_note_file_name(self, note_page):
-        dirty_filename = note_page.title + '.md'
+    def generate_output_path_and_set_note_file_name(self, note):
+        dirty_filename = note.get_title() + '.md'
         self.output_file_name = (generate_clean_path(dirty_filename))
         n = 0
         target_path = Path(self.current_directory_path, self.output_folder,
-                           note_page.notebook_folder_name, self.output_file_name)
+                           note.get_notebook_folder_name(), self.output_file_name)
         while target_path.exists():
             n += 1
-            target_path = Path(self.current_directory_path, self.output_folder, note_page.notebook_folder_name,
+            target_path = Path(self.current_directory_path, self.output_folder, note.get_notebook_folder_name(),
                                f"{Path(self.output_file_name).stem}-{n}{Path(self.output_file_name).suffix}")
 
         self.output_file_name = target_path.name
