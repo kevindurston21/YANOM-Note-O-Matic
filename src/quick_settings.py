@@ -3,7 +3,7 @@ Provide classes for provision of conversion settings for manual or specific pre 
 
 """
 import object_factory
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from globals import APP_NAME
 import inspect
 import logging
@@ -11,7 +11,6 @@ from helper_functions import generate_clean_path
 from custom_inherit import DocInheritMeta
 import os
 from pathlib import Path
-import sys
 
 
 def what_module_is_this():
@@ -130,6 +129,10 @@ class ConversionSettings(metaclass=DocInheritMeta(style="numpy", abstract_base_c
             'spaces_in_tags': ('True', 'False'),
             'split_tags': ('True', 'False')
         },
+        'table_options': {
+            'first_row_as_header': ('True', 'False'),
+            'first_column_as_header': ('True', 'False')
+        },
         'file_options': {
             'source': '',
             'export_folder_name': '',
@@ -139,13 +142,13 @@ class ConversionSettings(metaclass=DocInheritMeta(style="numpy", abstract_base_c
         'image_link_formats': {'image_link_format': ('strict_md', 'obsidian', 'gfm-html')}
     }
 
-    def __init__(self, **kwargs):
+    def __init__(self):
         # Note #comments are treated as 'values' with no value in a config.ini.
         # So to get the comment into the ini use a dictionary entry
         # where the key value pair are like this '#your comment': None
         # the #comments in these dicts are only there to add comments to the config.ini
 
-        # if you change anr of the following dictionaries changes are likely to affect the quick settings child classes
+        # if you change any of the following dictionaries changes are likely to affect the quick settings child classes
         # and the ConfigFileValidationSettings class
         # self.output_file_types = ['md', 'pdf']
         self.logger = logging.getLogger(f'{APP_NAME}.{what_module_is_this()}.{what_class_is_this(self)}')
@@ -166,6 +169,8 @@ class ConversionSettings(metaclass=DocInheritMeta(style="numpy", abstract_base_c
         self._tag_prefix = '#'
         self._spaces_in_tags = False
         self._split_tags = False
+        self._first_row_as_header = True
+        self._first_column_as_header = True
         self._export_folder_name = 'notes'
         self._attachment_folder_name = 'attachments'
         self._creation_time_in_exported_file_name = False
@@ -179,6 +184,8 @@ class ConversionSettings(metaclass=DocInheritMeta(style="numpy", abstract_base_c
                f"yaml_header={self.yaml_meta_header_format}, insert_title={self.insert_title}, " \
                f"insert_creation_time={self.insert_creation_time}, insert_modified_time={self.insert_modified_time}, " \
                f"include_tags={self.include_tags}, tag_prefix='{self.tag_prefix}', " \
+               f"first_row_as_header={self._first_row_as_header}, " \
+               f"first_column_as_header={self._first_column_as_header}" \
                f"spaces_in_tags={self.spaces_in_tags}, split_tags={self.split_tags}, " \
                f"export_folder_name='{self.export_folder_name}', " \
                f"attachment_folder_name='{self.attachment_folder_name}', " \
@@ -191,6 +198,8 @@ class ConversionSettings(metaclass=DocInheritMeta(style="numpy", abstract_base_c
                f"yaml_header={self.yaml_meta_header_format}, insert_title={self.insert_title}, " \
                f"insert_creation_time={self.insert_creation_time}, insert_modified_time={self.insert_modified_time}, " \
                f"include_tags={self.include_tags}, tag_prefix='{self.tag_prefix}', " \
+               f"first_row_as_header={self._first_row_as_header}, " \
+               f"first_column_as_header={self._first_column_as_header}" \
                f"spaces_in_tags={self.spaces_in_tags}, split_tags={self.split_tags}, " \
                f"export_folder_name='{self.export_folder_name}', " \
                f"attachment_folder_name='{self.attachment_folder_name}', " \
@@ -243,8 +252,11 @@ class ConversionSettings(metaclass=DocInheritMeta(style="numpy", abstract_base_c
 
     @quick_setting.setter
     def quick_setting(self, value):
+        if value is None:
+            return
         if value in self.valid_quick_settings:
             self._quick_setting = value
+            return
         else:
             raise ValueError(f"Invalid value for quick setting. "
                              f"Attempted to use {value}, valid values are {self.valid_quick_settings}")
@@ -334,6 +346,22 @@ class ConversionSettings(metaclass=DocInheritMeta(style="numpy", abstract_base_c
         self._split_tags = value
 
     @property
+    def first_row_as_header(self):
+        return self._first_row_as_header
+
+    @first_row_as_header.setter
+    def first_row_as_header(self, value: bool):
+        self._first_row_as_header = value
+
+    @property
+    def first_column_as_header(self):
+        return self._first_column_as_header
+
+    @first_column_as_header.setter
+    def first_column_as_header(self, value: bool):
+        self._first_column_as_header = value
+
+    @property
     def export_folder_name(self):
         return self._export_folder_name
 
@@ -388,6 +416,8 @@ class ManualConversionSettings(ConversionSettings):
         self.include_tags = False
         self.spaces_in_tags = False
         self.split_tags = False
+        self.first_row_as_header = False
+        self.first_column_as_header = False
 
 
 class QOwnNotesConversionSettings(ConversionSettings):
@@ -422,6 +452,7 @@ class ObsidianConversionSettings(ConversionSettings):
     def set_settings(self):
         self.logger.info("Obsidian conversion settings")
         self.quick_setting = 'obsidian'
+        self.export_format = 'obsidian'
         self.yaml_meta_header_format = True
         self.image_link_format = 'obsidian'
 

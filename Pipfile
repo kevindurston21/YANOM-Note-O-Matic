@@ -7,6 +7,9 @@ name = "pypi"
 pyfiglet = "*"
 pyinquirer = "*"
 custom-inherit = "*"
+numpy = "*"
+matplotlib = "*"
+pandas = "*"
 
 [dev-packages]
 

@@ -77,6 +77,7 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
             if include:
                 self.__ask_and_set_metadata_details()
                 self.__ask_and_set_tag_prefix()
+            self.__ask_and_set_table_details()
             self.__ask_and_set_export_folder_name()
             self.__ask_and_set_attachment_folder_name()
             self.__ask_and_set_creation_time_in_file_name()
@@ -195,6 +196,36 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
 
         if 'Split tags' in answers['metadata_details']:
             self._current_conversion_settings.split_tags = True
+
+    def __ask_and_set_table_details(self):
+        questions = [
+            {
+                'type': 'checkbox',
+                'message': 'Select table options',
+                'name': 'table_options',
+                'choices': [
+                    Separator('= Table Options ='),
+                    {
+                        'name': 'First row of table as header row',
+                        'checked': self._default_settings.first_row_as_header
+                    },
+                    {
+                        'name': 'First column of table as header column',
+                        'checked': self._default_settings.first_column_as_header
+                    },
+
+                ],
+            }
+        ]
+
+        answers = prompt(questions, style=self.style)
+
+        if 'First row of table as header row' in answers['table_options']:
+            self._current_conversion_settings.first_row_as_header = True
+
+        if 'First column of table as header column' in answers['table_options']:
+            self._current_conversion_settings.first_column_as_header = True
+
 
     def __ask_and_set_tag_prefix(self):
         questions = [
