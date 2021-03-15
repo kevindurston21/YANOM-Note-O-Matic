@@ -131,4 +131,3 @@ dmypy.json
 # Other files
 .DS_Store
 /Pipfile.lock
-/src/normal.log.1
