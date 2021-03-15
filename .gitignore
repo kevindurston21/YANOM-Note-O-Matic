@@ -37,7 +37,7 @@ MANIFEST
 pip-log.txt
 pip-delete-this-directory.txt
 
-# Unit test.py / coverage reports
+# Unit test / coverage reports
 htmlcov/
 .tox/
 .nox/
@@ -127,7 +127,3 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-
-# Other files
-.DS_Store
-/Pipfile.lock
